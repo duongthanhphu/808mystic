@@ -1,0 +1,5 @@
+DELETE   http://localhost:4000/api/v1/category/
+
+{
+    "ids" : [8,6,5]
+}

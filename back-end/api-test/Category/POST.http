@@ -1,0 +1,9 @@
+POST http://localhost:4000/api/v1/category
+Content-Type: application/json
+
+{
+    "name":"test 2",
+    "slug":"thit cho ngon 123",
+    "status": 1
+}
+
