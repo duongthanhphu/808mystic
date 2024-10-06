@@ -1,11 +1,10 @@
-import { Prisma, PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
+import prismaService from "../prisma.service";
+import { Prisma } from '@prisma/client';
 
 export const createImage = async (data: Prisma.ImageUncheckedCreateInput) => {
 
     try {
-        return await prisma.image.create({
+        return await prismaService.image.create({
             data
         })
         
@@ -18,7 +17,7 @@ export const createImage = async (data: Prisma.ImageUncheckedCreateInput) => {
 export const updateImage = async (id: number, data: Prisma.ImageUncheckedCreateInput) => {
     try {
         
-        return await prisma.image.update({
+        return await prismaService.image.update({
             where:{
                 id: id
             },
@@ -32,7 +31,7 @@ export const updateImage = async (id: number, data: Prisma.ImageUncheckedCreateI
 
 export const deleteImage = async (id: number) => {
     try {
-        return await prisma.image.delete({
+        return await prismaService.image.delete({
             where: {
                 id: id,
             },

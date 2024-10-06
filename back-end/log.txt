@@ -1,8 +1,12 @@
-To map your data model to the database schema, you need to use the prisma migrate CLI commands:
-npx prisma migrate dev --name init
+1. Create the database schema 
+    
+    ` npx prisma migrate dev --name init `
 
+This command does two things:
 
-npx prisma db push --schema custom/path/to/my/schema  # note this is now a directory!
+    It creates a new SQL migration file for this migration
+    It runs the SQL migration file against the database
 
-
-
+2. Install and generate Prisma Client
+npm install @prisma/client
+    npx prisma migrate dev --name ...

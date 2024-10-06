@@ -1,10 +1,9 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import prismaService from "../../prisma.service";
 
-const prisma = new PrismaClient();
 
 const findAll = async () => {
     try {
-        return await prisma.category.findMany({
+        return await prismaService.category.findMany({
             include: {
                 childCategories: true
             }
@@ -15,13 +14,15 @@ const findAll = async () => {
         } else {
             console.error('Unexpected error:', error);
         }
+    } finally {
+        await prismaService.$disconnect(); 
     }
 }
 
 
 const findByid = async (id: string) => {
     try {
-        return await prisma.category.findUnique({
+        return await prismaService.category.findUnique({
             where: {
                 id: Number(id)
             },
@@ -35,12 +36,14 @@ const findByid = async (id: string) => {
         } else {
             console.error('Unexpected error:', error);
         }
-    }    
+    } finally {
+        await prismaService.$disconnect(); 
+    } 
 }
 
 const findByLevel = async (level: string) => {
     try {
-        return await prisma.category.findMany({
+        return await prismaService.category.findMany({
             where : {
                 level: Number(level)
             },
@@ -59,44 +62,48 @@ const findByLevel = async (level: string) => {
         } else {
             console.error('Unexpected error:', error);
         }
-    }  
+    } finally {
+        await prismaService.$disconnect(); 
+    } 
 }
 
 
 const deleteAll = async () => {
     try {
-        return await prisma.category.deleteMany()
+        return await prismaService.category.deleteMany()
     }catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);
         } else {
             console.error('Unexpected error:', error);
         }
+    } finally {
+        await prismaService.$disconnect(); 
     }  
 }
 
 const findCategoriesWithAttributes = async () => {
     try {
-        const categories = await prisma.category.findMany({
+        const categories = await prismaService.category.findMany({
             include: {
-                attributes: true, // Join với bảng CategoryAttribute
-                childCategories: true, // Nếu bạn cũng muốn lấy các category con
+                attributes: true, 
+                childCategories: true, 
             },
         });
         
-        return categories; // Trả về danh sách categories cùng với attributes
+        return categories; 
     } catch (error) {
         console.error('Error fetching categories with attributes:', error);
         throw error;
     } finally {
-        await prisma.$disconnect(); // Đóng kết nối
+        await prismaService.$disconnect(); 
     }
 };
 
 const findAttributesByCategoryId = async (categoryId: string) => {
     try {
         console.log(categoryId)
-        const attributes = await prisma.categoryAttribute.findMany({
+        const attributes = await prismaService.categoryAttribute.findMany({
             where: {
                 categoryId: Number(categoryId) // Lọc thuộc tính theo categoryId
             },
@@ -111,7 +118,10 @@ const findAttributesByCategoryId = async (categoryId: string) => {
     } catch (error) {
         console.error('Error fetching attributes by categoryId:', error);
         throw new Error('Unable to fetch attributes for the specified category.');
+    } finally {
+        await prismaService.$disconnect(); 
     }
+    
 };
 
 export default {

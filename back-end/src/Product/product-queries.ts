@@ -1,11 +1,11 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import prismaService from "../prisma.service";
+import { Prisma } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 
 const findAll = async () => {
     try {
-        return await prisma.product.findMany({
+        return await prismaService.product.findMany({
             
         })
     }catch (error: unknown) {
@@ -19,7 +19,7 @@ const findAll = async () => {
 
 const createProduct = async (data: Prisma.ProductUncheckedCreateInput) => {
     try {
-        return await prisma.product.create({
+        return await prismaService.product.create({
             data
         })
     }catch (error: unknown) {

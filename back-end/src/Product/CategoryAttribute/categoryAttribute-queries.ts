@@ -1,11 +1,11 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import prismaService from "../../prisma.service";
+import { Prisma } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 
 const findAll = async () => {
     try {
-        return await prisma.categoryAttribute.findMany()
+        return await prismaService.categoryAttribute.findMany()
     }catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);
@@ -17,7 +17,7 @@ const findAll = async () => {
 
 const findById = async ( id: String) => {
     try {
-        return await prisma.categoryAttribute.findUnique({
+        return await prismaService.categoryAttribute.findUnique({
             where : {
                 id: Number(id)
             }
@@ -34,7 +34,7 @@ const findById = async ( id: String) => {
 
 const createCategory = async (categoryAttribute: Prisma.CategoryAttributeUncheckedCreateInput) => {
     try {
-        const existingCategory = await prisma.category.findUnique({
+        const existingCategory = await prismaService.category.findUnique({
             where: { id: categoryAttribute.categoryId }
             });
 
@@ -43,7 +43,7 @@ const createCategory = async (categoryAttribute: Prisma.CategoryAttributeUncheck
             return console.error('Invalid categoryId, category does not exist');
             }
 
-        return await prisma.categoryAttribute.create({
+        return await prismaService.categoryAttribute.create({
             data: categoryAttribute
         })
     }catch (error: unknown) {

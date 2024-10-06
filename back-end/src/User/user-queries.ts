@@ -1,10 +1,9 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prismaService from "../prisma.service";
+import { Prisma } from '@prisma/client';
 
 const findAll = async () => {
     try {
-        return await prisma.user.findMany({
+        return await prismaService.user.findMany({
         })
     }catch (error: unknown) {
         if (error instanceof Error) {
@@ -17,7 +16,7 @@ const findAll = async () => {
 
 const findById = async (id: string) => {
     try {
-        return await prisma.user.findUnique({
+        return await prismaService.user.findUnique({
             where: {
                 id: Number(id)
             },
@@ -34,7 +33,7 @@ const findById = async (id: string) => {
 const findByUsername = async (username: string) => {
     try {
         console.log(username)
-        return await prisma.user.findUnique({
+        return await prismaService.user.findUnique({
             where: {
                 username: username
             }
@@ -60,7 +59,7 @@ const findByPassword = async (
             passwordIterations
         } as Prisma.UserWhereInput;
 
-        return await prisma.user.findFirst({
+        return await prismaService.user.findFirst({
             where: whereClause
         });
     } catch (error: unknown) {
@@ -74,7 +73,7 @@ const findByPassword = async (
 
 const findExistingUser = async (username: string, email: string) => {
     try {
-        return await prisma.user.findFirst({
+        return await prismaService.user.findFirst({
             where: {
                 OR: [
                 { username },
@@ -95,7 +94,7 @@ const createUser = async (
     user: Prisma.UserUncheckedCreateInput
 ) => {
     try {
-        return await prisma.user.create({
+        return await prismaService.user.create({
             data: user
         })
     }catch (error: unknown) {
@@ -109,7 +108,7 @@ const createUser = async (
 
 const updateUser = async (id: number, user: Prisma.UserUncheckedCreateInput) => {
     try {
-        return await prisma.user.update({
+        return await prismaService.user.update({
             where: {
                 id: id
             },
@@ -126,7 +125,7 @@ const updateUser = async (id: number, user: Prisma.UserUncheckedCreateInput) => 
 
 const deleteUser = async (id: number) => {
     try {
-        return await prisma.user.delete({
+        return await prismaService.user.delete({
             where: {
                 id: id
             },
@@ -142,7 +141,7 @@ const deleteUser = async (id: number) => {
 
 const deleteManyUser = (id: number) => {
     try {
-        return prisma.user.delete({
+        return prismaService.user.delete({
                     where: {
                         id: id
                     },

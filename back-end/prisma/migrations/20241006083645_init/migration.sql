@@ -52,6 +52,24 @@ CREATE TABLE "product_attribute_values" (
 );
 
 -- CreateTable
+CREATE TABLE "image_product" (
+    "id" SERIAL NOT NULL,
+    "productId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "path" TEXT NOT NULL,
+    "contentType" TEXT NOT NULL,
+    "publicId" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "isThumbnail" BOOLEAN NOT NULL,
+    "isEliminated" BOOLEAN NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "image_product_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "products" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(200) NOT NULL,
@@ -252,6 +270,9 @@ ALTER TABLE "product_attribute_values" ADD CONSTRAINT "product_attribute_values_
 
 -- AddForeignKey
 ALTER TABLE "product_attribute_values" ADD CONSTRAINT "product_attribute_values_attributeId_fkey" FOREIGN KEY ("attributeId") REFERENCES "category_attributes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "image_product" ADD CONSTRAINT "image_product_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "products" ADD CONSTRAINT "products_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
