@@ -1,83 +1,81 @@
 import { Request, Response } from 'express';
-import query from './category-queries'
+import query from './category-queries';
 
 const findAllCategoryHandler = async (req: Request, res: Response) => {
+    const { page = 1, pageSize = 10 } = req.query;
     try {
-        const categoriesFromServer = await query.findAll()
+        const result = await query.findAll(Number(page), Number(pageSize));
         res.json({
             message: 'success',
-            categories: categoriesFromServer
+            ...result
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: 'Error fetching users' 
+        res.status(500).json({
+            error: 'Error fetching categories'
         });
     }
-}
-
+};
 
 const findByIdCategoryHandler = async (req: Request, res: Response) => {
-    const { id } = req.params
+    const { id } = req.params;
     try {
-        const categoryFromServer = await query.findByid(id)
+        const categoryFromServer = await query.findByid(id);
         res.json({
             message: 'success',
             category: categoryFromServer
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: 'Error fetching users' 
+        res.status(500).json({
+            error: 'Error fetching category'
         });
     }
-}
+};
 
 const findByLevelCategoryHandler = async (req: Request, res: Response) => {
-    const { level } = req.params
+    const { level } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
     try {
-        const categoryFromServer = await query.findByLevel(level)
-        
+        const result = await query.findByLevel(level, Number(page), Number(pageSize));
         res.json({
             message: 'success',
-            categories: categoryFromServer
+            ...result
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: 'Error fetching users' 
+        res.status(500).json({
+            error: 'Error fetching categories'
         });
     }
-}
+};
 
 const deleteCategoryHandler = async (req: Request, res: Response) => {
-    const { level } = req.params
     try {
-        const categoryFromServer = await query.deleteAll()
-        
+        const result = await query.deleteAll();
         res.json({
             message: 'success',
-            categories: categoryFromServer
+            deletedCount: result
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: 'Error fetching users' 
+        res.status(500).json({
+            error: 'Error deleting categories'
         });
     }
-}
+};
 
 const findCategoryAttributesByIdHandler = async (req: Request, res: Response) => {
+    const { categoryId } = req.params;
+    const { page = 1, pageSize = 10 } = req.query;
     try {
-        const {categoryId} = req.params
-        console.log(categoryId)
-        const categoriesFromServer = await query.findAttributesByCategoryId(categoryId)
+        const result = await query.findAttributesByCategoryId(categoryId, Number(page), Number(pageSize));
         res.json({
             message: 'success',
-            categories: categoriesFromServer
+            ...result
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: 'Error fetching users' 
+        res.status(500).json({
+            error: 'Error fetching category attributes'
         });
     }
-}
+};
 
 export default {
     findAllCategoryHandler,
@@ -85,4 +83,4 @@ export default {
     findByLevelCategoryHandler,
     deleteCategoryHandler,
     findCategoryAttributesByIdHandler
-}
+};

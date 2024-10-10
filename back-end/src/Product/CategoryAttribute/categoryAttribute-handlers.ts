@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import query from './categoryAttribute-queries'
 
-
+// Cho nay co bug ==> Chua fix
 const createCategoryAttribute = async (req: Request, res: Response) => {
     try {
         console.log(req.body); 
@@ -17,6 +17,7 @@ const createCategoryAttribute = async (req: Request, res: Response) => {
             require,
             slug
         };
+
 
         const newCategoryAttribute = await query.createCategory(categoriesObjectData)
 

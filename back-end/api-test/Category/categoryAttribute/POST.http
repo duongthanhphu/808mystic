@@ -3,7 +3,7 @@ Content-Type: application/json
 
 {
     "name": "Thuong hieu",
-    "categoryId": 4954,
+    "categoryId": 1035,
     "value": [
         {
             "originName" : "Vietnam"

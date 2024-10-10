@@ -30,7 +30,7 @@ model Category {
 
 model CategoryAttribute {
   id         Int       @id @default(autoincrement())
-  categoryId Int       
+  categoryId Int      
   name       String    @db.VarChar(50)
   value      Json
   formName   String?   @db.VarChar(20)
@@ -42,40 +42,37 @@ model CategoryAttribute {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
   category   Category  @relation(fields: [categoryId], references: [id])
-  productAttributeValues ProductAttributeValue[]
-
+  attributeValues AttributeValue[]
   @@map("category_attributes")
 }
 
-model ProductAttributeValue {
-  productId   Int
-  attributeId Int
-  status      String    @default("available")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  product     Product   @relation(fields: [productId], references: [id])
-  attribute   CategoryAttribute @relation(fields: [attributeId], references: [id])
-  @@id([productId, attributeId])
-  @@map("product_attribute_values")
-}
-
-model Image {
-  id           Int      @id @default(autoincrement())
-  productId    Int
-  name         String 
-  path         String
-  contentType  String
-  publicId     String
-  size         Int
-  isThumbnail  Boolean
-  isEliminated Boolean
-  product      Product   @relation(fields: [productId], references: [id])
+model AttributeValue {
+  id           Int       @id @default(autoincrement())
+  attributeId  Int
+  value        Json
+  status       String    @default("available")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
-  @@map("image_product")
+  attribute    CategoryAttribute @relation(fields: [attributeId], references: [id])
+  productAttributeValues ProductAttributeValue[]
+  @@map("attribute_values")
 }
+
+model ProductAttributeValue {
+  productId       Int
+  attributeValueId Int
+  status          String    @default("available")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  product         Product   @relation(fields: [productId], references: [id])
+  attributeValue  AttributeValue @relation(fields: [attributeValueId], references: [id])
+  @@id([productId, attributeValueId])
+  @@map("product_attribute_values")
+}
+
+
 
 model Product {
   id                 Int       @id @default(autoincrement())
@@ -100,6 +97,23 @@ model Product {
   @@map("products")
 }
 
+
+model Image {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  name         String 
+  path         String
+  contentType  String
+  publicId     String
+  size         Int
+  isThumbnail  Boolean
+  isEliminated Boolean
+  product      Product   @relation(fields: [productId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  @@map("image_product")
+}
 
 
 model ClassificationGroup {
@@ -153,21 +167,21 @@ model ProductClassification {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
-  username           String    @unique @db.VarChar(50)
-  passwordSalt       String    @db.VarChar(255)
-  passwordHash       String    @db.VarChar(255)
-  passwordIterations Int       @default(10000)  
+  id                 Int        @id @default(autoincrement())
+  username           String     @unique @db.VarChar(50)
+  passwordSalt       String     @db.VarChar(255)
+  passwordHash       String     @db.VarChar(255)
+  passwordIterations Int        @default(10000)  
   avatar             String?      
-  email              String    @unique @db.VarChar(100)
-  fullName           String?   @db.VarChar(100)
-  emailVerified   Boolean @default(false)    // New field to check if email is verified
-  verificationToken String?                  // New field to store verification token
-  tokenExpiry     DateTime?                  // New field to store token expiry time
-  userType           UserType  @default(CUSTOMER)
+  email              String     @unique @db.VarChar(100)
+  fullName           String?    @db.VarChar(100)
+  emailVerified      Boolean    @default(false)    
+  verificationToken  String?                  
+  tokenExpiry        DateTime?                  
+  userType           UserType   @default(CUSTOMER)
   status             UserStatus @default(AVAILABLE)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
   deletedAt          DateTime?
   products           Product[]
   cart               Cart?

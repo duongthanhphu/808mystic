@@ -1,1 +1,1 @@
-GET http://localhost:4000/api/v1/categories/4954/attributes/
+GET http://localhost:4000/api/v1/categories/1035/attributes/

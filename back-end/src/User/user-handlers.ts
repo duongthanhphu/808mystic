@@ -57,7 +57,7 @@ const signup = async (req: Request, res: Response) => {
         fullName,
         avatar,
     } = req.body;
-
+    console.log(req.body)
     try {
         const existingUser = await prisma.user.findFirst({
             where: {

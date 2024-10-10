@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Paper, Title, Grid, Transition, TextInput, Select, Text } from '@mantine/core';
+import { Paper, Title, Grid, Transition, TextInput, Select, Text, Button, Stack } from '@mantine/core';
 import axios from 'axios';
 import ResourceURL from '../../Constants/ResourseUrl';
-
+import DropzoneComponent from '../../Components/Dropzone';
 export default function BrandManage() {
     const [visible, setVisible] = useState([false, false, false, false]);
     const [options, setOptions] = useState([]);
     const [category, setCategory] = useState(null);
     const [subcategory, setSubcategory] = useState(null);
     const [item, setItem] = useState(null);
-
+    const [attributes, setAttributes] = useState([]);
+const [hasClassification, setHasClassification] = useState(false);
     useEffect(() => {
         if (isCategoryFullySelected()) {
             const timers = [1, 2, 3].map((_, i) => {
@@ -30,7 +31,6 @@ export default function BrandManage() {
         try {
             const resp = await axios.get(ResourceURL.CATEGORY + '/level/' + 1);
             const categories = resp.data.categories;
-            console.log(categories);
             const formattedData = categories.map((category) => ({
                 value: category.id.toString(),
                 label: category.name,
@@ -60,11 +60,23 @@ export default function BrandManage() {
         setSubcategory(null);
         setItem(null);
         setVisible([true, false, false, false]);
+        fetchAttributes(value);
     };
 
     const handleSubcategoryChange = (value) => {
         setSubcategory(value);
         setItem(null);
+    };
+
+    const fetchAttributes = async (categoryId) => {
+        try {
+            const response = await axios.get(`${ResourceURL.CATEGORY}/${categoryId}/attributes`);
+            setAttributes(response.data.categories);
+            
+            response.data.categories[0].value[0].originName.map(option => console.log(option.name))
+        } catch (error) {
+            console.error('Error fetching attributes:', error);
+        }
     };
 
     const selectedCategory = options.find((opt) => opt.value === category);
@@ -76,9 +88,9 @@ export default function BrandManage() {
     );
 
     const isCategoryFullySelected = () => {
-        if (!category) return false;
-        if (selectedCategory?.childCategories.length > 0 && !subcategory) return false;
-        if (selectedSubcategory?.childCategories.length > 0 && !item) return false;
+        // if (!category) return false;
+        // if (selectedCategory?.childCategories.length > 0 && !subcategory) return false;
+        // if (selectedSubcategory?.childCategories.length > 0 && !item) return false;
         return true;
     };
 
@@ -90,6 +102,69 @@ export default function BrandManage() {
         return path.join(' / ');
     };
 
+    const renderDynamicForm = () => {
+        return attributes.map((attribute) => {
+            switch (attribute.formType) {
+                case 'Select': {
+                    const options = attribute.value[0]?.originName || [];
+                    return (
+                        <Select
+                            key={attribute.id}
+                            label={attribute.formName}
+                            placeholder={`Select ${attribute.formName}`}
+                            data={options.map((item) => ({
+                                value: item.id.toString(),
+                                label: item.name,
+                            }))}
+                            required={attribute.require}
+                        />
+                    );
+                }
+                default: {
+                    return (
+                        <TextInput
+                            key={attribute.id}
+                            label={attribute.formName}
+                            placeholder={`Enter ${attribute.formName}`}
+                            required={attribute.require}
+                        />
+                    );
+                }
+            }
+        });
+    };
+    const renderClassification = () => {
+    if (hasClassification) {
+        return (
+            <div>
+                <TextInput
+                    label="Tên phân loại"
+                    placeholder="Nhập tên phân loại"
+                />
+                <TextInput
+                    label="Tuỳ chọn"
+                    placeholder="Nhập tuỳ chọn"
+                />
+            </div>
+        );
+    } else {
+        return (
+            <div>
+                <Button onClick={() => setHasClassification(true)}>Thêm phân loại hàng</Button>
+                <div>
+                    <TextInput
+                    label="Giá"
+                    placeholder="Nhập giá tiền"
+                    />
+                    <TextInput
+                        label="Kho hàng"
+                        placeholder="Nhập số lượng"
+                    />
+                </div>
+            </div>
+        );
+    }
+}
     return (
         <>
             <Title order={2} mb="md">
@@ -103,6 +178,11 @@ export default function BrandManage() {
                             label="Đặt tên cho sản phẩm"
                             placeholder="Đặt tên cho sản phẩm"
                         />
+                        <Stack className='my-3' gap="xs">
+                            <Text>Chọn hình ảnh cho sản phẩm</Text>
+                            <DropzoneComponent />
+                        </Stack>
+                        
                         <Select
                             label="Ngành hàng"
                             placeholder="Chọn ngành hàng"
@@ -152,7 +232,8 @@ export default function BrandManage() {
                             >
                                 {(styles) => (
                                     <Paper shadow="xs" p="xl" style={styles}>
-                                        2
+                                    <Title order={4}>Thông tin chi tiết</Title>
+                                    {renderDynamicForm()}
                                     </Paper>
                                 )}
                             </Transition>
@@ -167,7 +248,8 @@ export default function BrandManage() {
                             >
                                 {(styles) => (
                                     <Paper shadow="xs" p="xl" style={styles}>
-                                        3
+                                        <Title order={4}>Thông tin bán hàng</Title>
+                                        {renderClassification()}
                                     </Paper>
                                 )}
                             </Transition>

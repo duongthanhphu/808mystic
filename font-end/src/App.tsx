@@ -1,12 +1,12 @@
-import { MantineProvider } from '@mantine/core';
-import { Notifications } from '@mantine/notifications';
-import { ModalsProvider } from '@mantine/modals';
-
+import '@mantine/dropzone/styles.css';
 import '@mantine/core/styles.css';
 import '@mantine/core/styles/global.css';
 import '@mantine/carousel/styles.css';
 import '@mantine/notifications/styles.css';
-
+import '@mantine/tiptap/styles.css';
+import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import DefaultShell from './Components/DefaultShell/DefaultShell'
 import AdminDashboard from './Pages/AdminDashboard'

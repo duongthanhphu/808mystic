@@ -9,7 +9,7 @@ import {
 } from './app.config'
 dotenv.config()
 const app = express();
-
+app.use(express.json({limit: '50mb'}));
 
 app.use(express.json());
 app.use(cors({ origin: 'http://localhost:5173' }));
@@ -19,10 +19,10 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 import categoryRouter from '../src/Product/Category/cateogory-routers'; 
 import categoryAttributeRouter from '../src/Product/CategoryAttribute/categoryAttribute-routers'
 import imageRouter from './Image/image-routers'; 
-
 import productRouter from '../src/Product/product-routers'
-
 import userRouter from './User/user-routes'
+import main from './Product/Category/seed';
+
 
 
 //---------------------- USE ROUTER ----------------------------------------
