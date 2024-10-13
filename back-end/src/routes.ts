@@ -5,4 +5,6 @@ export { default as productRouter } from '../src/Product/product-routers';
 export { default as userRouter } from './User/user-routes';
 export { default as cartRouter } from './Cart/cart-routers';
 export { default as orderRouter } from './Order/order-routers';
+export { default as addressRouter } from './User/Address/address-routers';
+export { default as sellerRouter } from './Seller/seller-routes';
 

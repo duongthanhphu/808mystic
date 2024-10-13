@@ -10,6 +10,9 @@ type routePath = {
     USER: string;
     CART: string;
     ORDER: string;
+    ADDRESS: string;
+    SELLER: string;
+
 };
 
 const routes : routePath = {
@@ -18,7 +21,9 @@ const routes : routePath = {
     PRODUCT: `${baseAPI}products`,
     USER: `${baseAPI}users`,
     CART: `${baseAPI}carts`,
-    ORDER: `${baseAPI}orders`
+    ORDER: `${baseAPI}orders`,
+    ADDRESS: `${baseAPI}address`,
+    SELLER: `${baseAPI}seller`
 };
 
 export default routes;

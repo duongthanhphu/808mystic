@@ -20,6 +20,7 @@ import ProductManage from './Pages/Product/ProductManage'
 // Seller 
 import SellerShell from './Components/SellerShell/SellerShell'
 import SellerRegister from './Pages/Seller/SellerRegister/SellerRegister'
+import SellerLogin from './Pages/Seller/SellerLogin/SellerLogin'
 import SellerDashboard from './Pages/Seller/SellerDashboard/Dashboard'
 import CreateProduct from './Pages/Seller/SellerProductManage/CreateProduct'
 import ManageProduct from './Pages/Seller/SellerProductManage/ManageProduct'
@@ -63,6 +64,7 @@ function App() {
                             <Route path="homepage" element={<HomePage />} />
                             <Route path="product/:id" element={<ProductDetail />} />
                             <Route path="seller-register" element={<SellerRegister />} />
+                            <Route path="seller-login" element={<SellerLogin />} />
                         </Route>
                     </Routes>
                 </Router>

@@ -1,6 +1,6 @@
 function SellerFooter(){
     return <>
-        Seller Header
+        {/* Seller Header */}
     </>
 }
 

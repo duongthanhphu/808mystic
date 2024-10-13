@@ -207,14 +207,33 @@ model Address {
   provinceId             Int
   districtId             Int
   wardId                 Int
-  userId                 Int       @default(1) 
+  userId                 Int?
+  sellerId               Int?
   create_at              DateTime  @default(now())
   update_at              DateTime?
   delete_at              DateTime?
   province               Province  @relation(fields: [provinceId], references: [id])
   district               District  @relation(fields: [districtId], references: [id])
   ward                   Ward      @relation(fields: [wardId], references: [id])
-  user                   User      @relation(fields: [userId], references: [id])
+  user                   User?     @relation(fields: [userId], references: [id])
+  seller                 Seller?   @relation(fields: [sellerId], references: [id])
+}
+
+model Seller {
+  id                      Int        @id @default(autoincrement())
+  userId                  Int        @unique
+  storeName               String     @db.VarChar(100)
+  pickupAddress           String     @db.VarChar(255)
+  email                   String     @unique @db.VarChar(100)
+  shippingSettings        Json?
+  taxInformation          Json?
+  identificationCode      String?    @db.VarChar(50)
+  approvedAt              DateTime?
+  addresses               Address[]
+  status                  SellerStatus @default(PENDING)
+  userType                UserType   @default(CUSTOMER)
+  user                    User       @relation(fields: [userId], references: [id])
+  @@map("sellers")
 }
 
 model Province {
@@ -261,21 +280,6 @@ model Ward {
   AdministrativeUnitId    Int?
   district                District  @relation(fields: [DistrictCode], references: [Code])
   addresses               Address[]
-}
-
-model Seller {
-  id                      Int        @id @default(autoincrement())
-  userId                  Int        @unique
-  storeName               String     @db.VarChar(100)
-  pickupAddress           String     @db.VarChar(255)
-  email                   String     @unique @db.VarChar(100)
-  shippingSettings        Json?
-  taxInformation          Json?
-  identificationCode      String?    @db.VarChar(50)
-  status                  SellerStatus @default(PENDING)
-  approvedAt              DateTime?
-  user                    User       @relation(fields: [userId], references: [id])
-  @@map("sellers")
 }
 
 enum UserType {

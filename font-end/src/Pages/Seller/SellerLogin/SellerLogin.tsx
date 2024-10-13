@@ -25,7 +25,7 @@ function SellerRegister(){
     const handleSubmit = async (values) => {
         setLoading(true); 
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/users/signin', {
+            const response = await axios.post('http://localhost:4000/api/v1/seller/login    ', {
                 username: values.username,
                 password: values.password,
             },{ withCredentials: true });
@@ -70,7 +70,7 @@ function SellerRegister(){
                 setCountdown((prevCountdown) => prevCountdown - 1);
             }, 1000);
         } else if (countdown === 0) {
-            navigate('/homepage');
+            navigate('/seller');
         }
         return () => clearInterval(timer);
     }, [countdown, navigate]);

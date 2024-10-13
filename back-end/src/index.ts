@@ -9,12 +9,14 @@ import {
     productRouter,
     userRouter,
     cartRouter,
-    orderRouter
+    orderRouter,
+    addressRouter,
+    sellerRouter
 } from './routes';
 import { loadCategories, loadAddresses } from './seeds';
 
 // Uncomment these lines if you want to run the seed functions to initial Data
-loadCategories();
+// loadCategories();
 // loadAddresses();
 
 const app = express();
@@ -37,6 +39,8 @@ const configureRoutes = (app: express.Application) => {
     app.use(PATH.USER, userRouter);
     app.use(PATH.CART, cartRouter);
     app.use(PATH.ORDER, orderRouter);
+    app.use(PATH.ADDRESS, addressRouter);
+    app.use(PATH.SELLER, sellerRouter);
 };
 
 const initializeServer = () => {

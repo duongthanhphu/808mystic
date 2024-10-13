@@ -180,7 +180,8 @@ CREATE TABLE "Address" (
     "provinceId" INTEGER NOT NULL,
     "districtId" INTEGER NOT NULL,
     "wardId" INTEGER NOT NULL,
-    "userId" INTEGER NOT NULL DEFAULT 1,
+    "userId" INTEGER,
+    "sellerId" INTEGER,
     "create_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "update_at" TIMESTAMP(3),
     "delete_at" TIMESTAMP(3),
@@ -429,7 +430,10 @@ ALTER TABLE "Address" ADD CONSTRAINT "Address_districtId_fkey" FOREIGN KEY ("dis
 ALTER TABLE "Address" ADD CONSTRAINT "Address_wardId_fkey" FOREIGN KEY ("wardId") REFERENCES "Ward"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Address" ADD CONSTRAINT "Address_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "sellers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "District" ADD CONSTRAINT "District_ProvinceCode_fkey" FOREIGN KEY ("ProvinceCode") REFERENCES "Province"("Code") ON DELETE RESTRICT ON UPDATE CASCADE;
