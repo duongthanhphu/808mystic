@@ -3,6 +3,7 @@ import { paginateQuery, PaginationResult } from "../../Utils/PaginationUtils";
 
 const findAll = async (page: number = 1, pageSize: number = 10): Promise<PaginationResult<any>> => {
     try {
+        
         return await paginateQuery(
             (skip, take) => prismaService.category.findMany({
                 include: { childCategories: true },

@@ -178,7 +178,9 @@ export default function ProductManage(){
 
     const loadAttributes = async (categoryId) => {
         setIsLoading(true);
+        console.log(categoryId)
         try {
+            console.log(categoryId)
             const response = await fetch(`http://localhost:4000/api/v1/categories/${categoryId}/attributes?page=1&pageSize=10`);
             const data = await response.json();
             console.log(data)
@@ -218,63 +220,63 @@ export default function ProductManage(){
     const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
+        const formData = new FormData();
 
-      // Append product data
-      formData.append('name', productName);
-      formData.append('categoryId', selectedCategory.id.toString());
-      formData.append('hasClassification', classificationData ? 'true' : 'false');
-      formData.append('sellerId', '1');
+        // Append product data
+        formData.append('name', productName);
+        formData.append('categoryId', selectedCategory.id.toString());
+        formData.append('hasClassification', classificationData ? 'true' : 'false');
+        formData.append('sellerId', '1');
 
-      if (attributes.length > 0) {
-        const attributeValues = attributes.map(attr => ({
-          attributeId: attr.id,
-          value: { name: attr.value[0].originName[0].name }
-        }));
-        formData.append('attributeValues', JSON.stringify(attributeValues));
-      }
-
-      if (classificationData) {
-        if (classificationData.classificationGroups) {
-          formData.append('classificationGroups', JSON.stringify(classificationData.classificationGroups));
+        if (attributes.length > 0) {
+            const attributeValues = attributes.map(attr => ({
+            attributeId: attr.id,
+            value: { name: attr.value[0].originName[0].name }
+            }));
+            formData.append('attributeValues', JSON.stringify(attributeValues));
         }
-        if (classificationData.classifications) {
-          formData.append('classifications', JSON.stringify(classificationData.classifications));
+
+        if (classificationData) {
+            if (classificationData.classificationGroups) {
+                formData.append('classificationGroups', JSON.stringify(classificationData.classificationGroups));
+            }
+            if (classificationData.classifications) {
+                formData.append('classifications', JSON.stringify(classificationData.classifications));
+            }
+        } else {
+            if (quantity !== undefined) {
+                formData.append('quantity', quantity.toString());
+            }
+            if (stock !== undefined) {
+                formData.append('stock', stock.toString());
+            }
         }
-      } else {
-        if (quantity !== undefined) {
-          formData.append('quantity', quantity.toString());
+
+        selectedFiles.forEach((file) => {
+            formData.append('images', file, file.name);
+        });
+
+        const response = await fetch('http://localhost:4000/api/v1/products/', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to create product');
         }
-        if (stock !== undefined) {
-          formData.append('stock', stock.toString());
+
+        const result = await response.json();
+        console.log('Product created successfully:', result);
+        // Handle success (e.g., show a success message, reset form, etc.)
+
+        } catch (error) {
+        console.error('Error creating product:', error);
+        // Handle error (e.g., show error message to user)
+        } finally {
+        setIsSubmitting(false);
         }
-      }
-
-      selectedFiles.forEach((file) => {
-        formData.append('images', file, file.name);
-      });
-
-      const response = await fetch('http://localhost:4000/api/v1/products/', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create product');
-      }
-
-      const result = await response.json();
-      console.log('Product created successfully:', result);
-      // Handle success (e.g., show a success message, reset form, etc.)
-
-    } catch (error) {
-      console.error('Error creating product:', error);
-      // Handle error (e.g., show error message to user)
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    };
     return <>
         <div className="w-1/2">
             <Title order={3}>Thêm sản phẩm</Title>

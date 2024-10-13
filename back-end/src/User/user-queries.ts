@@ -32,7 +32,6 @@ const findById = async (id: string) => {
 
 const findByUsername = async (username: string) => {
     try {
-        console.log(username)
         return await prismaService.user.findUnique({
             where: {
                 username: username

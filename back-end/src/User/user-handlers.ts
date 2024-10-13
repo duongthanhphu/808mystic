@@ -1,32 +1,16 @@
-import { PrismaClient, Prisma, User, UserType, UserStatus } from '@prisma/client';
-const prisma = new PrismaClient();
-
 import { Request, Response } from 'express';
-import {
-            generateRandomSalt,
-            hashPassword,
-            comparePassword
-        } from '../Utils/bcrypt'
-import {
-        findAll,
-        findById,
-        findExistingUser,
-        findByUsername,
-        findByPassword,
-        createUser,
-        updateUser,
-        deleteUser,
-        deleteManyUser
-    } from './user-queries'
-import crypto from 'crypto'; 
-import nodemailer from 'nodemailer';
+import {  Prisma, UserType, UserStatus, User } from '@prisma/client';
+import prismaService from '../prisma.service';
+import passwordBcrypt from '../Utils/bcrypt'
+import jwt from 'jsonwebtoken';
+
 
 const findAllUserHandler = async (req: Request, res: Response) => {
     try {
-        const users = await findAll()
+        const user = await prismaService.user.findMany({})
         res.json({
             message: 'success',
-            users: users
+            user: user
         });
     } catch (error) {
         res.status(500).json({ error: 'Error fetching users' });
@@ -36,7 +20,11 @@ const findAllUserHandler = async (req: Request, res: Response) => {
 const findUserByIdHandler = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const user = await findById(id)
+        const user = await prismaService.user.findUnique({
+            where: {
+                id: Number(id)
+            },
+        })
         user === null || user === undefined
         ? res.status(404).json({ error: 'User not found' }) 
         : res.json(user);
@@ -44,10 +32,6 @@ const findUserByIdHandler = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Error fetching user' });
     }
 };
-
-const generateVerificationPin = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();  
-}
 
 const signup = async (req: Request, res: Response) => {
     const { 
@@ -57,44 +41,28 @@ const signup = async (req: Request, res: Response) => {
         fullName,
         avatar,
     } = req.body;
-    console.log(req.body)
     try {
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                OR: [{ username }, { email }],
-            }
-        });
-        if (existingUser) return res.status(400).json({ error: 'Username or email already exists' });
-
-        const passwordSalt = generateRandomSalt(10); 
-        const passwordHash = hashPassword(password, passwordSalt);
-        
-        const verificationPin = generateVerificationPin();
-        const pinExpiry = new Date(Date.now() + 1000 * 60 * 10); 
-
+        const passwordClient = passwordBcrypt.passwordGenerate(password);
         const userFromClient = {
-            username,
-            email,
-            passwordSalt,
-            passwordHash,
+            username: username,
+            email: email,
+            passwordSalt: passwordClient.salt, 
+            passwordHash: passwordClient.hash, 
             passwordIterations: 10000, 
-            avatar,
-            fullName,
-            userType: UserType.CUSTOMER,
-            status: UserStatus.UNAVAILABLE, 
+            avatar: avatar,
+            fullName: fullName,
+            userType: UserType.CUSTOMER, 
+            status: UserStatus.AVAILABLE, 
             emailVerified: false,
-            verificationToken: verificationPin, 
-            tokenExpiry: pinExpiry,
-            createdAt: new Date(),
+            verificationToken: passwordClient.verificationPin, 
+            tokenExpiry: passwordClient.pinExpiry, 
+            createdAt: new Date(), 
         };
-
-        const newUser = await prisma.user.create({
-            data: userFromClient,
+        const newUser = await prismaService.user.create({data: userFromClient});
+        console.log("Người dùng chưa tồn tại: " + newUser)
+        res.status(201).json({ 
+            message: "User created successfully."
         });
-        
-        await sendVerificationEmail(email, verificationPin);
-
-        res.status(201).json({ message: 'User created. Please verify your email.' });
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             if (error.code === 'P2002') {
@@ -108,73 +76,49 @@ const signup = async (req: Request, res: Response) => {
         }
     }
 };
-const sendVerificationEmail = async (email: string, pin: string) => {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // Or another email provider
-        auth: {
-            user: 'haylamditmemay1996@gmail.com',
-            pass: 'bwwr jrwg znwc ahiz',
-        },
-    });
-
-    const mailOptions = {
-        from: 'haylamditmemay1996@gmail.com',
-        to: email,
-        subject: 'Verify your email',
-        html: `<h3>Verify your email using this code:</h3><h2>${pin}</h2>`,
-    };
-
-    await transporter.sendMail(mailOptions);
-};
-
-const verifyEmail = async (req: Request, res: Response) => {
-    const { email, code } = req.body;
-    console.log(email)
-
-    try {
-        const user = await prisma.user.findFirst({
-            where: { email, verificationToken: code }
-        });
-
-        if (!user) return res.status(400).json({ error: 'Invalid or expired PIN' });
-        
-
-        if (user.tokenExpiry && new Date() > user.tokenExpiry) return res.status(400).json({ error: 'PIN expired' });
-        
-
-        await prisma.user.update({
-            where: { id: user.id },
-            data: {
-                emailVerified: true,
-                verificationToken: null, 
-                tokenExpiry: null 
-            }
-        });
-
-        res.json({ message: 'Email verified successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error verifying email' });
-    }
-};
-
 
 const signin = async (req: Request, res: Response) => {
     const { username, password } = req.body;
+    const accessTokenFromEnv: string | undefined = process.env.ACCESS_TOKEN;
+    const refreshTokenFromEnv: string | undefined = process.env.REFRESH_TOKEN;
+    
     try {
-        const user = await findByUsername(username)
+        const user = await prismaService.user.findUnique({ where: { username } });
+        if (user && passwordBcrypt.comparePassword(password, user.passwordSalt, user.passwordHash)) {
 
-        if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+            if (!accessTokenFromEnv) return res.status(500).json({ error: 'Internal server error' });
+            if (!refreshTokenFromEnv) return res.status(500).json({ error: 'Internal server error' });
+            
+
+            const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '15m' });
+            const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
+            const session = await prismaService.session.create({
+                    data: {
+                        userId: user.id,
+                        refreshToken,
+                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+                    }
+            });
+            res.cookie('accessToken', accessToken, {
+                httpOnly: false,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 60 * 60 * 1000 // 15 phút
+            });
+
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+            });
+
+
+            return res.status(200).json({ message: 'Đăng nhập thành công' }); 
+        }
+
+        return res.status(401).json({ error: 'Sai mật khẩu hoặc tài khoản' });
         
-
-        const isPasswordValid = comparePassword(password, user.passwordSalt ,user.passwordHash);
-
-        if (!isPasswordValid) return res.status(401).json({ error: 'Invalid username or password' });
-        
-
-        const {  ...userWithoutPassword } = user;
-
-        res.json({ user: userWithoutPassword});
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ 
@@ -183,10 +127,10 @@ const signin = async (req: Request, res: Response) => {
     }
 };
 
-export {
+
+export default {
     findAllUserHandler,
     findUserByIdHandler,
     signup,
     signin,
-    verifyEmail 
 }

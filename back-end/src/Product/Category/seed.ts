@@ -57,7 +57,7 @@ async function upsertCategory(
 }
 
 
-async function main() {
+async function loadCateogries() {
   try {
     const data: CategoryData[] = JSON.parse(fs.readFileSync('categories.json', 'utf8'));
     const description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi porttitor euismod tortor, et bibendum quam venenatis sed. Nullam viverra tellus sed augue rhoncus, quis semper turpis tincidunt. Quisque tempor ultrices turpis non varius. Ut nibh est, consequat sed est a, eleifend varius sapien. Aenean consectetur convallis condimentum. Duis venenatis tincidunt dui, sit amet lobortis sem tempus eget. Duis non ligula tellus. Integer dui nulla, lobortis et ullamcorper eget, finibus sit amet elit. ';
@@ -95,7 +95,7 @@ async function main() {
       );
     }
 
-    console.log('Đã thêm hoặc cập nhật dữ liệu thành công');
+    console.log('Đã thêm hoặc cập nhật Ngành Hàng dữ liệu thành công');
   } catch (error) {
     console.error('Lỗi khi thêm hoặc cập nhật dữ liệu:', error);
   } finally {
@@ -104,7 +104,7 @@ async function main() {
 }
 
 
-main()
+  loadCateogries()
   .then(async () => {
     await prisma.$disconnect()
   })
@@ -114,4 +114,4 @@ main()
     process.exit(1)
   });
 
-  export default main
+  export default loadCateogries

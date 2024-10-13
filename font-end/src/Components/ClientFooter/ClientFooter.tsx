@@ -2,6 +2,7 @@ import { Text, Container, ActionIcon, Group, rem } from '@mantine/core';
 import { IconBrandTwitter, IconBrandYoutube, IconBrandInstagram } from '@tabler/icons-react';
 import { MantineLogo } from '@mantinex/mantine-logo';
 import classes from './ClientFooter.module.css';
+import { Link } from 'react-router-dom';
 
 const data = [
     {
@@ -61,7 +62,7 @@ export default function ClientFooter(){
             <div className={classes.logo}>
             <MantineLogo size={30} />
             <Text size="xs" c="dimmed" className={classes.description}>
-                Build fully functional accessible web applications faster than ever
+                <Link to='seller-register'>Đăng ký làm người bán</Link>
             </Text>
             </div>
             <div className={classes.groups}>{groups}</div>

@@ -1,19 +1,24 @@
 // API version
 const version = `v1`
 const baseAPI = `/api/${version}/`
-// -------------------------API Routes-----------------
-const CATEGORY_ATTRIBUTE: string = baseAPI + `categories` + `/categoryAttributes`;
-const CATEGORY: string = baseAPI + `categories`;
-const PRODUCT: string = baseAPI + `products`;
-const USER: string = baseAPI + `users`;
 
 
+type routePath = {
+    CATEGORY_ATTRIBUTE: string;
+    CATEGORY: string;
+    PRODUCT: string;
+    USER: string;
+    CART: string;
+    ORDER: string;
+};
 
+const routes : routePath = {
+    CATEGORY_ATTRIBUTE: `${baseAPI}categories/categoryAttributes`,
+    CATEGORY: `${baseAPI}categories`,
+    PRODUCT: `${baseAPI}products`,
+    USER: `${baseAPI}users`,
+    CART: `${baseAPI}carts`,
+    ORDER: `${baseAPI}orders`
+};
 
-
-export { 
-    USER,
-    CATEGORY,
-    PRODUCT,
-    CATEGORY_ATTRIBUTE
-}
+export default routes;

@@ -1,19 +1,37 @@
 import prismaService from "../prisma.service";
 import { Prisma } from '@prisma/client';
+import { paginateQuery, PaginationResult } from "../Utils/PaginationUtils";
 
 
 
-const findAll = async () => {
+const findAll = async (page: number = 1, pageSize: number = 10): Promise<PaginationResult<any>> => {
     try {
-        return await prismaService.product.findMany({
-            
-        })
-    }catch (error: unknown) {
-        if (error instanceof Error) {
-            console.error(error.message);
-        } else {
-            console.error('Unexpected error:', error);
-        }
+        
+        return await paginateQuery(
+            (skip, take) => prismaService.product.findMany({
+                include : {
+                    attributeValues: true,
+                    classificationGroups: {
+                        include: {
+                            options: true
+                        }
+                    },
+                    classifications: true,
+                    images: true,
+                
+                },
+                skip,
+                take,
+            }),
+            () => prismaService.product.count(),
+            page,
+            pageSize
+        );
+    } catch (error: unknown) {
+        console.error('Error in findAll:', error);
+        throw error;
+    } finally {
+        await prismaService.$disconnect();
     }
 }
 

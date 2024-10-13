@@ -5,19 +5,19 @@ import productQuery from './product-queries';
 
 const prisma = new PrismaClient();
 
-interface Product {
+export interface Product {
     name: string,
     categoryId: number,
     sellerId: number,
     attributes: {attributeId: number, value: any}[],
     slug?: string
 }
-interface ClassificationGroup {
+export interface ClassificationGroup {
     name: string;
     options: string[];
 }
 
-interface Classification {
+export interface Classification {
     option1: string;
     option2?: string;
     price: number;
@@ -249,22 +249,14 @@ const createProductHandler = async (req: Request, res: Response) => {
 
 
 const findAll = async (req: Request, res: Response) => {
+    const { page = 1, pageSize = 10 } = req.query;
+    console.log(req.query)
     try {
-        const product = await prisma.product.findMany({
-            include : {
-                attributeValues: true,
-                classificationGroups: {
-                    include: {
-                        options: true
-                    }
-                },
-                classifications: true,
-                images: true,
-                
-            }
-        })
+        
+        const result = await productQuery.findAll(Number(page), Number(pageSize))
         return res.json({
-            products : product
+            message: 'success',
+            ...result
         })
     }catch (error: unknown) {
         if (error instanceof Error) {

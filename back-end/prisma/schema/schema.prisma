@@ -60,14 +60,14 @@ model AttributeValue {
 }
 
 model ProductAttributeValue {
-  productId       Int
-  attributeValueId Int
-  status          String    @default("available")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-  product         Product   @relation(fields: [productId], references: [id])
-  attributeValue  AttributeValue @relation(fields: [attributeValueId], references: [id])
+  productId               Int
+  attributeValueId        Int
+  status                  String    @default("available")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  product                 Product   @relation(fields: [productId], references: [id])
+  attributeValue          AttributeValue @relation(fields: [attributeValueId], references: [id])
   @@id([productId, attributeValueId])
   @@map("product_attribute_values")
 }
@@ -75,120 +75,207 @@ model ProductAttributeValue {
 
 
 model Product {
-  id                 Int       @id @default(autoincrement())
-  name               String    @db.VarChar(200)
-  categoryId         Int
-  sellerId           Int
-  hasClassification  Boolean   @default(false)
-  slug               String?   @db.VarChar(100)
-  status             String    @default("available")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  deletedAt          DateTime?
-  category           Category  @relation(fields: [categoryId], references: [id])
-  seller             User      @relation(fields: [sellerId], references: [id])
-  attributeValues    ProductAttributeValue[]
-  classificationGroups ClassificationGroup[]
-  classifications    ProductClassification[] 
-  cartItems          CartItem[]
-  orderItems         OrderItem[]
-  preOrders          PreOrder[]
-  images             Image[]
+  id                      Int       @id @default(autoincrement())
+  name                    String    @db.VarChar(200)
+  categoryId              Int
+  sellerId                Int
+  hasClassification       Boolean   @default(false)
+  slug                    String?   @db.VarChar(100)
+  status                  String    @default("available")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  category                Category  @relation(fields: [categoryId], references: [id])
+  seller                  User      @relation(fields: [sellerId], references: [id])
+  attributeValues         ProductAttributeValue[]
+  classificationGroups    ClassificationGroup[]
+  classifications         ProductClassification[] 
+  cartItems               CartItem[]
+  orderItems              OrderItem[]
+  preOrders               PreOrder[]
+  images                  Image[]
   @@map("products")
 }
 
 
 model Image {
-  id           Int      @id @default(autoincrement())
-  productId    Int
-  name         String 
-  path         String
-  contentType  String
-  publicId     String
-  size         Int
-  isThumbnail  Boolean
-  isEliminated Boolean
-  product      Product   @relation(fields: [productId], references: [id])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  id                      Int      @id @default(autoincrement())
+  productId               Int
+  name                    String 
+  path                    String
+  contentType             String
+  publicId                String
+  size                    Int
+  isThumbnail             Boolean
+  isEliminated            Boolean
+  product                 Product   @relation(fields: [productId], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
   @@map("image_product")
 }
 
 
 model ClassificationGroup {
-  id        Int       @id @default(autoincrement())
-  productId Int
-  name      String    @db.VarChar(50)
-  status    String    @default("available")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  product   Product   @relation(fields: [productId], references: [id])
-  options   ClassificationOption[]
+  id                      Int       @id @default(autoincrement())
+  productId               Int
+  name                    String    @db.VarChar(50)
+  status                  String    @default("available")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  product                 Product   @relation(fields: [productId], references: [id])
+  options                 ClassificationOption[]
 
   @@map("classification_groups")
 }
 
 model ClassificationOption {
-  id        Int       @id @default(autoincrement())
-  groupId   Int
-  name      String    @db.VarChar(50)
-  status    String    @default("available")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  group     ClassificationGroup @relation(fields: [groupId], references: [id])
-  option1Classifications ProductClassification[] @relation("Option1")
-  option2Classifications ProductClassification[] @relation("Option2")
+  id                      Int       @id @default(autoincrement())
+  groupId                 Int
+  name                    String    @db.VarChar(50)
+  status                  String    @default("available")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  group                   ClassificationGroup @relation(fields: [groupId], references: [id])
+  option1Classifications  ProductClassification[] @relation("Option1")
+  option2Classifications  ProductClassification[] @relation("Option2")
 
   @@map("classification_options")
 }
 
 model ProductClassification {
-  id        Int       @id @default(autoincrement())
-  productId Int
-  option1Id Int
-  option2Id Int?
-  price     Decimal   @db.Decimal(10, 2)
-  stock     Int
-  status    String    @default("available")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  product   Product   @relation(fields: [productId], references: [id])
-  option1   ClassificationOption @relation("Option1", fields: [option1Id], references: [id])
-  option2   ClassificationOption? @relation("Option2", fields: [option2Id], references: [id])
-  cartItems CartItem[]
-  orderItems OrderItem[]
-  preOrders PreOrder[]
+  id                      Int       @id @default(autoincrement())
+  productId               Int
+  option1Id               Int
+  option2Id               Int?
+  price                   Decimal   @db.Decimal(10, 2)
+  stock                   Int
+  status                  String    @default("available")
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  product                 Product   @relation(fields: [productId], references: [id])
+  option1                 ClassificationOption @relation("Option1", fields: [option1Id], references: [id])
+  option2                 ClassificationOption? @relation("Option2", fields: [option2Id], references: [id])
+  cartItems               CartItem[]
+  orderItems              OrderItem[]
+  preOrders               PreOrder[]
 
   @@map("product_classifications")
 }
 
 model User {
-  id                 Int        @id @default(autoincrement())
-  username           String     @unique @db.VarChar(50)
-  passwordSalt       String     @db.VarChar(255)
-  passwordHash       String     @db.VarChar(255)
-  passwordIterations Int        @default(10000)  
-  avatar             String?      
-  email              String     @unique @db.VarChar(100)
-  fullName           String?    @db.VarChar(100)
-  emailVerified      Boolean    @default(false)    
-  verificationToken  String?                  
-  tokenExpiry        DateTime?                  
-  userType           UserType   @default(CUSTOMER)
-  status             UserStatus @default(AVAILABLE)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-  deletedAt          DateTime?
-  products           Product[]
-  cart               Cart?
-  orders             Order[]
-  preOrders          PreOrder[]
-  notifications      Notification[]
+  id                      Int        @id @default(autoincrement())
+  username                String     @unique @db.VarChar(50)
+  passwordSalt            String     @db.VarChar(255)
+  passwordHash            String     @db.VarChar(255)
+  passwordIterations      Int        @default(10000)  
+  avatar                  String?      
+  email                   String?    @unique @db.VarChar(100)
+  fullName                String?    @db.VarChar(100)
+  emailVerified           Boolean    @default(false)      
+  userType                UserType   @default(CUSTOMER)
+  status                  UserStatus @default(AVAILABLE)
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  deletedAt               DateTime?
+  products                Product[]
+  cart                    Cart?
+  orders                  Order[]
+  preOrders               PreOrder[]
+  notifications           Notification[]
+  seller                  Seller?    
+  sessions                Session[]
+  addresses               Address[]
   @@map("users")
+}
+
+model Session {
+  id                     Int   @id @default(autoincrement())
+  userId                 Int
+  user                   User     @relation(fields: [userId], references: [id])
+  refreshToken           String
+  expiresAt              DateTime
+  createdAt              DateTime @default(now())
+  @@map("sessions")
+}
+
+model Address {
+  id                     Int       @id @default(autoincrement())
+  provinceId             Int
+  districtId             Int
+  wardId                 Int
+  userId                 Int       @default(1) 
+  create_at              DateTime  @default(now())
+  update_at              DateTime?
+  delete_at              DateTime?
+  province               Province  @relation(fields: [provinceId], references: [id])
+  district               District  @relation(fields: [districtId], references: [id])
+  ward                   Ward      @relation(fields: [wardId], references: [id])
+  user                   User      @relation(fields: [userId], references: [id])
+}
+
+model Province {
+  id                     Int        @id @default(autoincrement())
+  Type                   String?
+  Code                   String     @unique
+  Name                   String?
+  NameEn                 String?
+  FullName               String?
+  FullNameEn             String?
+  CodeName               String?
+  AdministrativeUnitId   Int?
+  AdministrativeRegionId Int?
+  districts              District[]
+  addresses              Address[]
+}
+
+model District {
+  id                      Int       @id @default(autoincrement())
+  Type                    String?
+  Code                    String    @unique
+  Name                    String?
+  NameEn                  String?
+  FullName                String?
+  FullNameEn              String?
+  CodeName                String?
+  ProvinceCode            String
+  AdministrativeUnitId    Int?
+  province                Province  @relation(fields: [ProvinceCode], references: [Code])
+  wards                   Ward[]
+  addresses               Address[]
+}
+
+model Ward {
+  id                      Int       @id @default(autoincrement())
+  Type                    String?
+  Code                    String    @unique
+  Name                    String?
+  NameEn                  String?
+  FullName                String?
+  FullNameEn              String?
+  CodeName                String?
+  DistrictCode            String
+  AdministrativeUnitId    Int?
+  district                District  @relation(fields: [DistrictCode], references: [Code])
+  addresses               Address[]
+}
+
+model Seller {
+  id                      Int        @id @default(autoincrement())
+  userId                  Int        @unique
+  storeName               String     @db.VarChar(100)
+  pickupAddress           String     @db.VarChar(255)
+  email                   String     @unique @db.VarChar(100)
+  shippingSettings        Json?
+  taxInformation          Json?
+  identificationCode      String?    @db.VarChar(50)
+  status                  SellerStatus @default(PENDING)
+  approvedAt              DateTime?
+  user                    User       @relation(fields: [userId], references: [id])
+  @@map("sellers")
 }
 
 enum UserType {
@@ -201,6 +288,13 @@ enum UserStatus {
   AVAILABLE
   UNAVAILABLE
   BLOCKED
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
     Container,
     Stack,
@@ -18,15 +19,25 @@ import {
     IconShoppingCart,
     IconFileBarcode,
     IconBell,
-    IconList
+    IconList,
+    IconUser
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import classes from './ClientHeader.module.css';
 import Logo from '../Logo/808logo';
-
+import { checkAuthStatus } from '../../Utils/authentication';
 
 
 export default function ClientHeader() {
+        const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+        useEffect(() => {
+            const checkAuth = async () => {
+                const authStatus = await checkAuthStatus();
+                setIsAuthenticated(authStatus);
+            };
+
+            checkAuth();
+        }, []);
     return (
         <header className={classes.header}>
             <Container fluid >
@@ -35,8 +46,8 @@ export default function ClientHeader() {
                     gap="xs"
                 > 
                         <Flex justify='space-between' className='mx-40' >
-                            <Group component={Link}  >
-                                    <Logo />
+                            <Group component={Link} >
+                                    <Link to="/homepage"><Logo /></Link>
                             </Group>
                             <TextInput
                                     placeholder="Bạn tìm gì..."
@@ -47,33 +58,46 @@ export default function ClientHeader() {
                                     className='min-w-[600px]'
                             />
                             <Group justify='flex-end'>
+                                    {isAuthenticated ? (
+                                <>
                                     <Tooltip label="Giỏ hàng" position="bottom">
                                         <UnstyledButton component={Link} to="/cart">
-                                            <Group  px="sm" py="xs" >
+                                            <Group px="sm" py="xs">
                                                 <IconShoppingCart strokeWidth={1} />
-                                                <Text  size="sm">0</Text>
+                                                <Text size="sm">0</Text>
                                             </Group>
                                         </UnstyledButton>
                                     </Tooltip>
-
                                     <Tooltip label="Đơn hàng" position="bottom">
                                         <UnstyledButton component={Link} to="/order">
-                                            <Group  px="sm" py="xs" className={classes.iconGroup}>
+                                            <Group px="sm" py="xs" className={classes.iconGroup}>
                                                 <IconFileBarcode strokeWidth={1} />
                                             </Group>
                                         </UnstyledButton>
                                     </Tooltip>
-
                                     <Tooltip label="Thông báo" position="bottom">
                                         <UnstyledButton>
                                             <Indicator size={14} color="pink" withBorder>
-                                                <Group  px="sm" py="xs" className={classes.iconGroup}>
+                                                <Group px="sm" py="xs" className={classes.iconGroup}>
                                                     <IconBell strokeWidth={1} />
                                                 </Group>
                                             </Indicator>
                                         </UnstyledButton>
                                     </Tooltip>
-
+                                    <Tooltip label="Tài khoản" position="bottom">
+                                        <UnstyledButton>
+                                            <Group px="sm" py="xs" className={classes.iconGroup}>
+                                                <IconUser strokeWidth={1} />
+                                            </Group>
+                                        </UnstyledButton>
+                                    </Tooltip>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/signin">Đăng nhập</Link>
+                                    <Link to="/signup">Đăng ký</Link>
+                                </>
+                            )}
                                     
                             </Group>
                         </Flex >  
