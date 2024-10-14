@@ -47,15 +47,15 @@ model CategoryAttribute {
 }
 
 model AttributeValue {
-  id           Int       @id @default(autoincrement())
-  attributeId  Int
-  value        Json
-  status       String    @default("available")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
-  attribute    CategoryAttribute @relation(fields: [attributeId], references: [id])
-  productAttributeValues ProductAttributeValue[]
+  id                        Int       @id @default(autoincrement())
+  categoryAttributeValueId  Int
+  value                     Json
+  status                    String    @default("available")
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  deletedAt                 DateTime?
+  attribute                 CategoryAttribute @relation(fields: [categoryAttributeValueId], references: [id])
+  productAttributeValues    ProductAttributeValue[]
   @@map("attribute_values")
 }
 
@@ -73,7 +73,6 @@ model ProductAttributeValue {
 }
 
 
-
 model Product {
   id                      Int       @id @default(autoincrement())
   name                    String    @db.VarChar(200)
@@ -87,7 +86,7 @@ model Product {
   deletedAt               DateTime?
   category                Category  @relation(fields: [categoryId], references: [id])
   seller                  User      @relation(fields: [sellerId], references: [id])
-  attributeValues         ProductAttributeValue[]
+  ProductAttributeValue   ProductAttributeValue[]
   classificationGroups    ClassificationGroup[]
   classifications         ProductClassification[] 
   cartItems               CartItem[]
@@ -95,24 +94,6 @@ model Product {
   preOrders               PreOrder[]
   images                  Image[]
   @@map("products")
-}
-
-
-model Image {
-  id                      Int      @id @default(autoincrement())
-  productId               Int
-  name                    String 
-  path                    String
-  contentType             String
-  publicId                String
-  size                    Int
-  isThumbnail             Boolean
-  isEliminated            Boolean
-  product                 Product   @relation(fields: [productId], references: [id])
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  deletedAt               DateTime?
-  @@map("image_product")
 }
 
 
@@ -299,6 +280,23 @@ enum SellerStatus {
   APPROVED
   REJECTED
   SUSPENDED
+}
+
+model Image {
+  id                      Int      @id @default(autoincrement())
+  productId               Int
+  name                    String 
+  path                    String
+  contentType             String
+  publicId                String
+  size                    Int
+  isThumbnail             Boolean
+  isEliminated            Boolean
+  product                 Product   @relation(fields: [productId], references: [id])
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  @@map("image_product")
 }
 
 

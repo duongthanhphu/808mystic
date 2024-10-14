@@ -52,10 +52,7 @@ const signup = async (req: Request, res: Response) => {
             avatar: avatar,
             fullName: fullName,
             userType: UserType.CUSTOMER, 
-            status: UserStatus.AVAILABLE, 
-            emailVerified: false,
-            verificationToken: passwordClient.verificationPin, 
-            tokenExpiry: passwordClient.pinExpiry, 
+            status: UserStatus.AVAILABLE,  
             createdAt: new Date(), 
         };
         const newUser = await prismaService.user.create({data: userFromClient});

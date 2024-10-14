@@ -10,7 +10,6 @@ export default function ProductManage(){
     const [opened, { open, close }] = useDisclosure(false);
     const [isCategoryModalOpen, { open: openCategoryModal, close: closeCategoryModal }] = useDisclosure(false);
     const [classificationData, setClassificationData] = useState<ProductClassificationData | null>(null);
-    
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
@@ -222,7 +221,6 @@ export default function ProductManage(){
     try {
         const formData = new FormData();
 
-        // Append product data
         formData.append('name', productName);
         formData.append('categoryId', selectedCategory.id.toString());
         formData.append('hasClassification', classificationData ? 'true' : 'false');
@@ -268,11 +266,9 @@ export default function ProductManage(){
 
         const result = await response.json();
         console.log('Product created successfully:', result);
-        // Handle success (e.g., show a success message, reset form, etc.)
 
         } catch (error) {
         console.error('Error creating product:', error);
-        // Handle error (e.g., show error message to user)
         } finally {
         setIsSubmitting(false);
         }

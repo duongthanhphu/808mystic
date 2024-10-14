@@ -9,16 +9,29 @@ const findAll = async (page: number = 1, pageSize: number = 10): Promise<Paginat
         
         return await paginateQuery(
             (skip, take) => prismaService.product.findMany({
-                include : {
-                    attributeValues: true,
-                    classificationGroups: {
+                include: {
+                    category: true,
+                    ProductAttributeValue: {
                         include: {
-                            options: true
+                            attributeValue: {
+                                include: {
+                                    attribute: true
+                                }
+                            }
                         }
                     },
-                    classifications: true,
-                    images: true,
-                
+                    // classificationGroups: {
+                    //     include: {
+                    //         options: true
+                    //     }
+                    // },
+                    // classifications: {
+                    //     include: {
+                    //         option1: true,
+                    //         option2: true
+                    //     }
+                    // },
+                    // images: true
                 },
                 skip,
                 take,
@@ -35,31 +48,31 @@ const findAll = async (page: number = 1, pageSize: number = 10): Promise<Paginat
     }
 }
 
-const findProductDetail = async (productId: string) => {
+const findProductDetail = async (productId: number) => {
     try {
     const product = await prismaService.product.findUnique({
-        where: { id: Number(productId) },
+        where: { id: productId },
         include: {
             category: true,
-            attributeValues: {
-            include: {
-                attributeValue: {
+            ProductAttributeValue: {
                 include: {
-                    attribute: true
+                    attributeValue: {
+                        include: {
+                            attribute: true
+                        }
+                    }
                 }
-                }
-            }
             },
             classificationGroups: {
-            include: {
-                options: true
-            }
+                include: {
+                    options: true
+                }
             },
             classifications: {
-            include: {
-                option1: true,
-                option2: true
-            }
+                include: {
+                    option1: true,
+                    option2: true
+                }
             },
             images: true
         }

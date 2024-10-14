@@ -8,7 +8,6 @@ interface DecodedToken {
 
 export const checkAuthStatus = async (): Promise<boolean> => {
     const accessToken = getCookie('accessToken');
-    console.log(accessToken)
     if (!accessToken) return false;
 
     try {
@@ -25,6 +24,20 @@ export const checkAuthStatus = async (): Promise<boolean> => {
         return false;
     }
 };
+
+export const getUserId = (): string | null => {
+    const accessToken = getCookie('accessToken');
+    if (!accessToken) return null;
+
+    try {
+        const decodedToken = jwtDecode<DecodedToken>(accessToken);
+        return decodedToken.userId;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
+};
+
 
 async function refreshAccessToken(): Promise<boolean> {
     const refreshToken = getCookie('refreshToken');
@@ -60,7 +73,6 @@ export function logout() {
 
 function getCookie(name: string): string | null {
     const value = `; ${document.cookie}`;
-    console.log(value)
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
     return null;

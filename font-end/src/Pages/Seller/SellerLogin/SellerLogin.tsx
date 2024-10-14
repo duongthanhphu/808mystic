@@ -59,7 +59,7 @@ function SellerRegister(){
 
         validate: {
             username: (value) => value.trim().length === 0 ? 'Tên tài khoản không được để trống' : null,
-            password: (value) => value.length < 2 ? 'Mật khẩu phải có ít nhất 6 ký tự' : null,
+            password: (value) => value.length < 0 ? 'Mật khẩu phải có ít nhất 6 ký tự' : null,
         },
     });
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import handler from './product-handlers';
+// import handler from './product-handlers';
+import handler from './product-handlers.test';
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ const handleMulterError = (err: any, req: express.Request, res: express.Response
 router.use(handleMulterError);
 
 router
-  .get('/', handler.findAll)
+  // .get('/', handler.findAll)
   .get('/:id', handler.findByIdHandler)
   .post('/', upload.array('images', 10), handler.createProductHandler);
 
