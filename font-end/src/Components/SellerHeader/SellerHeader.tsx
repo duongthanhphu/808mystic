@@ -3,15 +3,6 @@ import {
     Container,
     Stack,
     Group,
-    Center,
-    TextInput,
-    Tooltip,
-    UnstyledButton,
-    Text,
-    Menu,
-    Button,
-    Badge,
-    Indicator,
     Flex
 } from '@mantine/core';
 import SellerLogo from '../Logo/sellerLogo';
@@ -37,8 +28,10 @@ function SellerHeader(){
                     gap="xs"
                 > 
                         <Flex justify='space-between' className='mx-40' >
-                            <Group component={Link} >
-                                    <Link to="/homepage" className='no-underline'><SellerLogo /></Link>
+                            <Group>
+                                    <Link to="/homepage" className='no-underline'>
+                                        <SellerLogo />
+                                    </Link>
                             </Group>
                             
                             <Group justify='flex-end'>

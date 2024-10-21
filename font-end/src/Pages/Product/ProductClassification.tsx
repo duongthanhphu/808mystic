@@ -32,10 +32,16 @@ interface VariantRow {
 }
 
 export interface ProductClassificationData {
-  classificationGroups: ClassificationGroup[];
-  classifications: Classification[];
-  quantity?: number;
-  stock?: number;
+  classificationGroups: {
+    name: string;
+    options: string[];
+  }[];
+  classifications: {
+    option1: string;
+    option2?: string;
+    price: number;
+    stock: number;
+  }[];
 }
 
 export interface ProductClassificationProps {

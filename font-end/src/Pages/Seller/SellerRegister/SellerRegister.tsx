@@ -8,6 +8,7 @@ import {
     Title,
     Text,
     Group,
+    Select,
     Button,
     Container,
     TextInput
@@ -25,7 +26,7 @@ function SellerRegister(){
     const handleSubmit = async (values) => {
         setLoading(true); 
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/users/signin', {
+            const response = await axios.post('http://localhost:4000/api/v1/sellers/register', {
                 username: values.username,
                 password: values.password,
             },{ withCredentials: true });
@@ -75,7 +76,7 @@ function SellerRegister(){
         return () => clearInterval(timer);
     }, [countdown, navigate]);
     return <>
-        <Container fluid className="shadow-lg">
+        <Container fluid className='shadow-md py-2'>
             <SellerHeader />
         </Container>
         <Container fluid>
@@ -85,26 +86,54 @@ function SellerRegister(){
                         <TextInput
                             label="Tài khoản"
                             placeholder="Nhập tên tài khoản"
-                            error="Invalid name"
+                            error="Sai tên đăng nhập"
                             {...form.getInputProps('username')}
                         />
                         <PasswordInput
                             label="Mật khẩu"
                             placeholder="Nhập mật khẩu"
                             mt="md"
-                            error="Invalid name"
+                            error="Sai mật khẩu"
                             {...form.getInputProps('password')}
                         />
-                        <Group justify="space-between" mt="lg">
-                            <Checkbox label="Remember me" {...form.getInputProps('accepted', { type: 'checkbox' })} />
-                            <Anchor component="button" size="sm">
-                                Quên mật khẩu
-                            </Anchor>
-                        </Group>
+                        <TextInput
+                            label="Tên cửa hàng"
+                            placeholder="Nhập tên cửa hàng"
+                            mt="md"
+                            error="Invalid name"
+                            {...form.getInputProps('storename')}
+                        />
+                        <TextInput
+                            label="Email"
+                            placeholder="Nhập Email"
+                            mt="md"
+                            error="Sai email"
+                            {...form.getInputProps('storename')}
+                        />
+                        <Select
+                            label="Tỉnh / Thành Phố"
+                            placeholder="Chọn tỉnh-thành phố"
+                            mt="md"
+                        >
+                        </Select>
+                        <Select
+                            label="Huyện / Quận"
+                            placeholder="Chọn quận-huyện"
+                            mt="md"
+                        >
+                            
+                        </Select>
+                        <Select
+                            label="Xã / Phường"
+                            placeholder="Chọn Xã-Phường"
+                            mt="md"
+                        >
+                            
+                        </Select>
                         <Button type="submit" fullWidth mt="xl" loading={loading} >
                             {   loading ? 'Đang đăng nhập...' : 
                                 success ? `Chuyển trang sau ${countdown}s` : 
-                                'Đăng nhập'
+                                'Đăng ký'
                             }
                         </Button>
                     </form>

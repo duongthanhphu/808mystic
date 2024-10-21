@@ -1,11 +1,11 @@
 import express from 'express';
-import * as OrderHandlers from './order-handlers';
+import { createOrder, confirmOrder, getOrderById } from './order-handlers';
 
 const router = express.Router();
 
-router.post('/', OrderHandlers.createOrder)
-.get('/:id', OrderHandlers.getOrder)
-.put('/:id/status', OrderHandlers.updateOrderStatus)
-.post('/:id/cancel', OrderHandlers.cancelOrder);
+router
+    .post('/', createOrder)
+    .put('/:orderId/confirm', confirmOrder)
+    .get('/:orderId', getOrderById);
 
 export default router;

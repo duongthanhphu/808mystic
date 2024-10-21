@@ -9,6 +9,7 @@ import {
     UnstyledButton,
     Text,
     Menu,
+    Popover,
     Button,
     Badge,
     Indicator,
@@ -46,7 +47,7 @@ export default function ClientHeader() {
                     gap="xs"
                 > 
                         <Flex justify='space-between' className='mx-40' >
-                            <Group component={Link} >
+                            <Group>
                                     <Link to="/homepage"><Logo /></Link>
                             </Group>
                             <TextInput
@@ -75,34 +76,51 @@ export default function ClientHeader() {
                                             </Group>
                                         </UnstyledButton>
                                     </Tooltip>
-                                    <Tooltip label="Thông báo" position="bottom">
-                                        <UnstyledButton>
-                                            <Indicator size={14} color="pink" withBorder>
-                                                <Group px="sm" py="xs" className={classes.iconGroup}>
-                                                    <IconBell strokeWidth={1} />
-                                                </Group>
-                                            </Indicator>
-                                        </UnstyledButton>
-                                    </Tooltip>
-                                    <Tooltip label="Tài khoản" position="bottom">
-                                        <UnstyledButton>
-                                            <Group px="sm" py="xs" className={classes.iconGroup}>
-                                                <IconUser strokeWidth={1} />
-                                            </Group>
-                                        </UnstyledButton>
-                                    </Tooltip>
+                                    
+                                    
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/signin">Đăng nhập</Link>
-                                    <Link to="/signup">Đăng ký</Link>
+                                    <div className='flex items-center gap-2'>
+                                        <Tooltip label="Thông báo" position="bottom">
+                                            <UnstyledButton>
+                                                <Indicator size={14} color="pink" withBorder>
+                                                    <Group px="sm" py="xs" className={classes.iconGroup}>
+                                                        <IconBell strokeWidth={2} />
+                                                    </Group>
+                                                </Indicator>
+                                            </UnstyledButton>
+                                        </Tooltip>
+                                        <Popover    width={200} 
+                                                    offset={{ mainAxis: 10, crossAxis: -33 }} 
+                                                    trapFocus 
+                                                    position="bottom" 
+                                                    withArrow 
+                                                    arrowOffset={14} 
+                                                    arrowSize={8} 
+                                            >
+                                            <Popover.Target >
+                                                <IconUser strokeWidth={2} />
+                                            </Popover.Target>
+                                            <Popover.Dropdown>
+                                                <Stack>
+                                                    <Link to="/signin" className='w-full border border-1 border-gray-300 rounded-md px-2 py-2 no-underline'>
+                                                        <p>Đăng nhập</p>
+                                                    </Link>
+                                                    <Link to="/signup" className='w-full border border-1 border-gray-300 rounded-md px-2 py-2 no-underline'>
+                                                        <p>Đăng ký</p>
+                                                    </Link>
+                                                </Stack>
+                                            </Popover.Dropdown>
+                                        </Popover>
+                                    </div>
                                 </>
                             )}
                                     
                             </Group>
                         </Flex >  
                         <Flex justify='space-between' align="center" className='mx-40'>
-                                    <Flex  flex-1 gap={10}>
+                                    <Flex   gap={10}>
                                         <Button leftSection={<IconList size={16} />} radius="md" className='pr-[50px] text-center'>
                                             Danh mục sản phẩm
                                         </Button>

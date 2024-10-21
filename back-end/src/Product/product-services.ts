@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { handlePrismaError } from '../Utils/DatabaseError'
-import {Product, AttributeValue, ClassificationGroup, ProductClassification} from './product-model'
+import {Product, AttributeValue, ClassificationGroup, ProductClassification, ProductFilterQuery} from './product-model'
 import query from './product-queries'
 import imageService from '../Image/image-services'
 const prisma = new PrismaClient();
@@ -10,31 +10,33 @@ const createProductService = async (
     productData: Product,
     attributeValues: Array<{ categoryAttributeValueId: number, value: { name: string } }>,
     classificationGroups: ClassificationGroup[],
-    productClassifications: ProductClassification[]
+    productClassifications: ProductClassification[],
+    files: Express.Multer.File[]
 ) => {
     try {
-        await prisma.$transaction(async (prismaTransaction) => {
-            // console.log('Starting transaction');
+        const productTransaction = await prisma.$transaction(async (prismaTransaction) => {
             const newProductDetails: Prisma.ProductCreateInput = {
                 name: productData.name,
+                shortDescription: productData.shortDescription,
+                longDescription: productData.longDescription,
                 category: {
                     connect: {
-                        id: productData.categoryId
+                        id: Number(productData.categoryId)
                     }
                 },
                 seller: {
                     connect: {
-                        id: productData.sellerId
+                        id: Number(productData.sellerId)
                     }
                 },
                 hasClassification: productData.hasClassification,
                 slug: 'something', 
             }
             const createdProductInDB = await prismaTransaction.product.create({data: newProductDetails})
+            console.log(createdProductInDB)
             
             if (typeof attributeValues === 'object') {
                 await Promise.all(Object.values(attributeValues).map(async (element, index) => {
-                    // console.log(`Processing attribute value ${index + 1}`);
                     let attributeValue = await prismaTransaction.attributeValue.findFirst({
                         where: {
                             categoryAttributeValueId: element.categoryAttributeValueId,
@@ -48,66 +50,83 @@ const createProductService = async (
                                 value: element.value,
                             }
                         });
-                        // console.log('New attribute value created:', attributeValue);
-                    }else {
-                        // console.log('Existing attribute value found:', attributeValue);
+                    } else {
+                        console.log('Existing attribute value found:', attributeValue);
                     }
-                    const pav = await prismaTransaction.productAttributeValue.create({
-                        data: {
+                    
+                    await prismaTransaction.productAttributeValue.upsert({
+                        where: {
+                            productId_attributeValueId: {
+                                productId: createdProductInDB.id,
+                                attributeValueId: attributeValue.id,
+                            }
+                        },
+                        update: {},
+                        create: {
                             productId: createdProductInDB.id,
                             attributeValueId: attributeValue.id,
                         }
                     });
-                    
                 }));
             }
-            console.log("PRoduct" + createdProductInDB.id)
-            if (Array.isArray(productClassifications)) {
+            if (Array.isArray(classificationGroups) && Array.isArray(productClassifications)) {
                 const createdGroups = await Promise.all(classificationGroups.map(async (group) => {
-                return await prismaTransaction.classificationGroup.create({
-                    data: {
-                        name: group.name,
-                        product: { connect: { id: createdProductInDB.id } },
-                        options: {
-                            create: group.options.map((option) => ({
-                                name: option.name,
-                            })),
-                        },
-                    },
-                    include: { options: true },
-                });
-            }));
-                
-            await Promise.all(classificationGroups.flatMap((group, groupIndex) =>
-                group.options.flatMap((option) =>
-                productClassifications.map(async (classification) => {
-                    const createdOption = createdGroups[groupIndex].options.find(o => o.name === option.name);
-                    const option2 = group.options.length > 1 ? createdGroups[groupIndex].options[1] : null;
-                    if (!createdOption) {
-                    throw new Error(`Option ${option.name} not found in created group`);
+                    if (!group.name) {
+                        throw new Error('Classification group name is required');
                     }
+                    if (!Array.isArray(group.options) || group.options.length === 0) {
+                        throw new Error(`Classification group "${group.name}" must have at least one valid option`);
+                    }
+                    return await prismaTransaction.classificationGroup.create({
+                        data: {
+                            name: group.name,
+                            product: { connect: { id: createdProductInDB.id } },
+                            options: {
+                                create: group.options.map((optionName) => ({ name: optionName })),
+                            },
+                        },
+                        include: { options: true },
+                    });
+                }));
+
+                const optionNameToId = new Map();
+                createdGroups.forEach(group => {
+                    group.options.forEach(option => {
+                        optionNameToId.set(option.name, option.id);
+                    });
+                });
+
+                await Promise.all(productClassifications.map(async (classification) => {
+                    const optionConnections: any = {};
+                    Object.entries(classification).forEach(([key, value]) => {
+                        if (key.startsWith('option')) {
+                            const optionId = optionNameToId.get(value);
+                            if (!optionId) {
+                                throw new Error(`Option ${value} not found`);
+                            }
+                            optionConnections[key] = { connect: { id: optionId } };
+                        }
+                    });
 
                     return prismaTransaction.productClassification.create({
                         data: {
                             price: classification.price,
                             stock: classification.stock,
                             product: { connect: { id: createdProductInDB.id } },
-                            option1: { connect: { id: createdOption.id } },
-                            ...(option2 && { option2: { connect: { id: option2.id } } }),
+                            ...optionConnections,
                         },
                     });
-                })
-                )
-            ));
+                }));
             }
-        
-            return createdProductInDB;
+            return createdProductInDB
         });
         
+
+        
+        return productTransaction;
     } catch (error) {
         console.error(`Error processing attribute value:`, error);
         throw error; 
-        
     }
 };
 
@@ -129,9 +148,20 @@ const findByIdService = async (id: number) => {
         throw error; 
     }
 }
+
+const findAllService = async (page: number = 1, pageSize: number = 10) => {
+    try {
+        return await query.findAll(page, pageSize )
+    }catch(error){
+        console.error(`Error find all products:`, error);
+        throw error; 
+    }
+}
+
+
 export default {
     createProductService,
     uploadProductImages,
-    findByIdService
+    findByIdService,
+    findAllService
 }
-

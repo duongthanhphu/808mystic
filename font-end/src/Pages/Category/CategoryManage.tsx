@@ -25,11 +25,14 @@ const CategoryManage = () => {
       required: true,
     },
   });
-
+ 
   const fetchCategories = async () => {
     try {
       const resp = await axios.get(ResourceURL.CATEGORY + '/level/' + 1);
-      const categories = resp.data.categories;
+      ///0-0
+      console.log( "fetchCategories" +resp.data)
+      console.log( resp.data.data)
+      const categories = resp.data.data;
       const formattedData = categories.map((category) => ({
         value: category.id.toString(),
         label: category.name,
@@ -88,6 +91,7 @@ const CategoryManage = () => {
         require: values.required,
         slug: attributeName.toLowerCase().replace(/ /g, '-')
       };
+      //0-0
 
       const response = await axios.post('http://localhost:4000/api/v1/categories/categoryAttributes/', payload);
       console.log('API Response:', response.data.data);

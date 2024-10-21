@@ -1,35 +1,32 @@
 import { query, Request, Response } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, Cart } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const findCartById = async (req: Request, res: Response) => {
-    const userId = 1
-    console.log(userId)
+    const {id} = req.params
     try {
             let cart = await prisma.cart.findUnique({
-                where: { userId },
-                include: {
-                    items: {
-                    include: {
-                        product: true,
-                        classification: true
-                    }
-                    }
-                }
+                where: { id: Number(id) },
+
             })
-            if (!cart) {
-                cart = await prisma.cart.create({
-                    data: { userId },
-                    include: {
-                    items: {
-                        include: {
-                        product: true,
-                        classification: true
-                        }
-                    }
-                    }
-                })
-            }
+
+            res.json(cart)
+    }catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(error.message);
+        } else {
+            console.error('Unexpected error:', error);
+        }
+    }
+}
+
+const findCarts = async (req: Request, res: Response) => {
+    
+    try {
+            let cart = await prisma.cart.findMany({
+                
+            })
+
             res.json(cart)
     }catch (error: unknown) {
         if (error instanceof Error) {
@@ -41,59 +38,31 @@ const findCartById = async (req: Request, res: Response) => {
 }
 
 const createCart = async (req: Request, res: Response) => {
-    const userId = 1
-    const { productId, classificationId, quantity } = req.body
-    console.log(req.body)
+
+    const data = req.body
+    console.log(data)
     try {
-            const product = await prisma.product.findUnique({
-                where: { id: productId }
-            })
-            if (!product) {
-                return res.status(404).json({ error: 'Sản phẩm không tồn tại' })
-            }
+            
 
-                // Lấy hoặc tạo giỏ hàng
-            let cart = await prisma.cart.findUnique({
-                where: { userId }
-            })
-            if (!cart) {
-                cart = await prisma.cart.create({
-                    data: { userId }
-                })
-            }
-            const existingItem = await prisma.cartItem.findFirst({
-                where: {
-                    cartId: cart.id,
-                    productId,
-                    classificationId
+            let cartFromServer: any = await prisma.cart.findFirst({
+                where: { 
+                    userId: Number(data.userId) ,
+                    classificationId: data.classificationId
                 }
             })
-
-            if (existingItem) {
-            const updatedItem = await prisma.cartItem.update({
-                where: { id: existingItem.id },
-                data: { quantity: existingItem.quantity + quantity },
-                include: {
-                product: true,
-                classification: true
-                }
-            })
-            res.json(updatedItem)
-            } else {
-                const newItem = await prisma.cartItem.create({
-                    data: {
-                        cartId: cart.id,
-                        productId,
-                        classificationId,
-                        quantity
-                    },
-                    include: {
-                    product: true,
-                    classification: true
-                    }
+            
+            if (!cartFromServer) {
+                let something = await prisma.cart.create({
+                    data: data
                 })
-                res.json(newItem)
+                console.log(something+ "123")
+            }else{ 
+                await prisma.cart.update({
+                    where: {id: cartFromServer.id},
+                    data: {quantity: cartFromServer?.quantity + data.quantity}
+                })
             }
+            return res.status(201).json(cartFromServer)
     }catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);
@@ -106,65 +75,69 @@ const createCart = async (req: Request, res: Response) => {
 const updateCart = async (req: Request, res: Response) => {
     try {
         const { itemId } = req.params
-        const { quantity } = req.body
-        const userId = 1
+        const data = req.body
+        
 
-        const cartItem = await prisma.cartItem.findFirst({
-            where: {
-                id: parseInt(itemId),
-                cart: {
-                userId
-                }
-            }
+        const cartFromServer = await prisma.cart.findFirst({
+            where: { id: Number(itemId) }
         })
-
-        if (!cartItem) {
-        return res.status(404).json({ error: 'Không tìm thấy sản phẩm trong giỏ hàng' })
+        
+        if (!cartFromServer) {
+            return res.status(404).json({ error: 'Sản phẩm không tồn tại' })
         }
+        if (data.quantity > 0){
+            await prisma.cart.update({
+                where: { id: parseInt(itemId) },
+                data: {
+                    quantity: data.quantity 
+                }
+            })
+            console.log(data.quantity )
+        }else {
+            await prisma.cart.delete({
+                where: { id: parseInt(itemId) },
+                
+            })
+        }        
 
-        const updatedItem = await prisma.cartItem.update({
-            where: { id: parseInt(itemId) },
-            data: { quantity },
-            include: {
-                product: true,
-                classification: true
-            }
+        const cartCreated = await prisma.cart.findFirst({
+            where: { id: Number(cartFromServer.id) }
         })
-
-        res.json(updatedItem)
+        res.status(200).json({
+            cart: cartCreated
+        })
     } catch (error) {
         res.status(500).json({ error: 'Không thể cập nhật số lượng sản phẩm' })
     }
 }
 
-const deleteCart = async (req: Request, res: Response) => {
-    try {
-        const { itemId } = req.params
-        const userId = 1
-        const cartItem = await prisma.cartItem.findFirst({
-            where: {
-                id: parseInt(itemId),
-                cart: {
-                userId
-                }
-            }
-        })
-        if (!cartItem) {
-            return res.status(404).json({ error: 'Không tìm thấy sản phẩm trong giỏ hàng' })
-        }
-        await prisma.cartItem.delete({
-            where: { id: parseInt(itemId) }
-        })
-        res.json({ message: 'Đã xóa sản phẩm khỏi giỏ hàng' })
-    } catch (error) {
-        res.status(500).json({ error: 'Không thể xóa sản phẩm khỏi giỏ hàng' })
-    }
-}
+// const deleteCart = async (req: Request, res: Response) => {
+//     try {
+//         const { itemId } = req.params
+//         const userId = 1
+//         const cartItem = await prisma.cartItem.findFirst({
+//             where: {
+//                 id: parseInt(itemId),
+//                 cart: {
+//                 userId
+//                 }
+//             }
+//         })
+//         if (!cartItem) {
+//             return res.status(404).json({ error: 'Không tìm thấy sản phẩm trong giỏ hàng' })
+//         }
+//         await prisma.cartItem.delete({
+//             where: { id: parseInt(itemId) }
+//         })
+//         res.json({ message: 'Đã xóa sản phẩm khỏi giỏ hàng' })
+//     } catch (error) {
+//         res.status(500).json({ error: 'Không thể xóa sản phẩm khỏi giỏ hàng' })
+//     }
+// }
 
 export default { 
     findCartById,
     updateCart,
-    deleteCart,
-    createCart
-
+    createCart,
+    findCarts
 };

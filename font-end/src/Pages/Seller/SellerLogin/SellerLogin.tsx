@@ -25,7 +25,7 @@ function SellerRegister(){
     const handleSubmit = async (values) => {
         setLoading(true); 
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/seller/login    ', {
+            const response = await axios.post('http://localhost:4000/api/v1/seller/login', {
                 username: values.username,
                 password: values.password,
             },{ withCredentials: true });
@@ -75,7 +75,7 @@ function SellerRegister(){
         return () => clearInterval(timer);
     }, [countdown, navigate]);
     return <>
-        <Container fluid className="shadow-lg">
+        <Container fluid className="shadow-lg p-2">
             <SellerHeader />
         </Container>
         <Container fluid>

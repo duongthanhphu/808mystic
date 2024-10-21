@@ -11,59 +11,6 @@ cloudinary.config({
 });
 
 
-
-// const createImageService = async (data: Prisma.ImageUncheckedCreateInput): Promise<Image> => {
-//     try {
-//         // Kiểm tra nếu `data.path` là base64 hay không
-//         const isBase64 = data.path.startsWith('data:image');
-//         let buffer: Buffer;
-
-//         if (isBase64) {
-//             // Nếu là base64, chuyển đổi thành buffer
-//             const base64Data = data.path.split(',')[1];
-//             buffer = Buffer.from(base64Data, 'base64');
-//         } else {
-//             // Nếu không, sử dụng đường dẫn trực tiếp (giả định multer buffer)
-//             buffer = Buffer.from(data.path, 'utf-8');
-//         }
-
-//         // Upload hình ảnh qua stream
-//         const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
-//             const stream = cloudinary.uploader.upload_stream(
-//                 { public_id: data.name, resource_type: 'auto' },
-//                 (error, result) => {
-//                     if (error) {
-//                         return reject(error);
-//                     }
-//                     if (!result) {
-//                         return reject(new Error('Upload failed, no result returned.'));
-//                     }
-//                     resolve(result);
-//                 }
-//             );
-//             stream.end(buffer);
-//         });
-
-//         const imageData: Prisma.ImageUncheckedCreateInput = {
-//             name: data.name,
-//             path: uploadResult.secure_url,
-//             contentType: uploadResult.type || '',
-//             publicId: uploadResult.public_id || '',
-//             size: uploadResult.bytes || 0,
-//             isThumbnail: data.isThumbnail,
-//             isEliminated: false,
-//             createdAt: new Date(),
-//             updatedAt: new Date(),
-//             deletedAt: null
-//         };
-
-//         return await query.createImage(imageData);
-//     } catch (error) {
-//         console.error('Error in createImageService:', error);
-//         throw error;
-//     }
-// };
-
 const uploadManyImageService = async (files: Express.Multer.File[], productId: string): Promise<Image[]> => {
     const queue = new PQueue({ concurrency: 2 }); // Giới hạn số lượng upload đồng thời
     try {

@@ -78,6 +78,8 @@ model Product {
   name                    String    @db.VarChar(200)
   categoryId              Int
   sellerId                Int
+  shortDescription        String?   @db.VarChar(200)
+  longDescription         String?   @db.VarChar(200)
   hasClassification       Boolean   @default(false)
   slug                    String?   @db.VarChar(100)
   status                  String    @default("available")
@@ -89,7 +91,6 @@ model Product {
   ProductAttributeValue   ProductAttributeValue[]
   classificationGroups    ClassificationGroup[]
   classifications         ProductClassification[] 
-  cartItems               CartItem[]
   orderItems              OrderItem[]
   preOrders               PreOrder[]
   images                  Image[]
@@ -140,7 +141,7 @@ model ProductClassification {
   product                 Product   @relation(fields: [productId], references: [id])
   option1                 ClassificationOption @relation("Option1", fields: [option1Id], references: [id])
   option2                 ClassificationOption? @relation("Option2", fields: [option2Id], references: [id])
-  cartItems               CartItem[]
+  cart                    Cart[]
   orderItems              OrderItem[]
   preOrders               PreOrder[]
 
@@ -156,21 +157,51 @@ model User {
   avatar                  String?      
   email                   String?    @unique @db.VarChar(100)
   fullName                String?    @db.VarChar(100)
-  emailVerified           Boolean    @default(false)      
+  phone                   String? 
+  emailVerified           Boolean    @default(false) 
+  otp                     String?    @db.VarChar(4)   
+  otpExpires              DateTime?     
   userType                UserType   @default(CUSTOMER)
   status                  UserStatus @default(AVAILABLE)
   createdAt               DateTime   @default(now())
-  updatedAt               DateTime   @updatedAt
+  updatedAt               DateTime?   @updatedAt
   deletedAt               DateTime?
   products                Product[]
-  cart                    Cart?
+  cart                    Cart[]
   orders                  Order[]
   preOrders               PreOrder[]
   notifications           Notification[]
   seller                  Seller?    
   sessions                Session[]
   addresses               Address[]
+  provinceCode            String?
+  districtCode            String?
+  wardCode                String?
+  address                 String?
   @@map("users")
+}
+
+model Seller {
+  id                      Int        @id @default(autoincrement())
+  userId                  Int        @unique
+  storeName               String     @db.VarChar(100)
+  pickupAddress           String     @db.VarChar(255)
+  email                   String     @unique @db.VarChar(100)
+  shippingSettings        Json?
+  taxInformation          Json?
+  identificationCode      String?    @db.VarChar(50)
+  approvedAt              DateTime?
+  ghtkShopId              String?    @unique
+  ghtkToken               String?
+  ghtkShopCreatedAt       DateTime?
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime?   @updatedAt
+  deletedAt               DateTime?
+  addresses               Address[]
+  status                  SellerStatus @default(PENDING)
+  userType                UserType   @default(CUSTOMER)
+  user                    User       @relation(fields: [userId], references: [id])
+  @@map("sellers")
 }
 
 model Session {
@@ -200,22 +231,6 @@ model Address {
   seller                 Seller?   @relation(fields: [sellerId], references: [id])
 }
 
-model Seller {
-  id                      Int        @id @default(autoincrement())
-  userId                  Int        @unique
-  storeName               String     @db.VarChar(100)
-  pickupAddress           String     @db.VarChar(255)
-  email                   String     @unique @db.VarChar(100)
-  shippingSettings        Json?
-  taxInformation          Json?
-  identificationCode      String?    @db.VarChar(50)
-  approvedAt              DateTime?
-  addresses               Address[]
-  status                  SellerStatus @default(PENDING)
-  userType                UserType   @default(CUSTOMER)
-  user                    User       @relation(fields: [userId], references: [id])
-  @@map("sellers")
-}
 
 model Province {
   id                     Int        @id @default(autoincrement())
@@ -299,36 +314,20 @@ model Image {
   @@map("image_product")
 }
 
-
 model Cart {
-  id        Int       @id @default(autoincrement())
-  userId    Int       @unique
-  status    String    @default("available")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  user      User      @relation(fields: [userId], references: [id])
-  items     CartItem[]
-
+  id                 Int                    @id @default(autoincrement())
+  userId             Int                    
+  classificationId   Int?
+  quantity           Int                    @default(1)
+  status             String                 @default("available")
+  user               User                   @relation(fields: [userId], references: [id])
+  classification     ProductClassification? @relation(fields: [classificationId], references: [id])
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
   @@map("carts")
 }
 
-model CartItem {
-  id                 Int       @id @default(autoincrement())
-  cartId             Int
-  productId          Int
-  classificationId   Int?
-  quantity           Int
-  status             String    @default("available")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  deletedAt          DateTime?
-  cart               Cart      @relation(fields: [cartId], references: [id])
-  product            Product   @relation(fields: [productId], references: [id])
-  classification     ProductClassification? @relation(fields: [classificationId], references: [id])
-
-  @@map("cart_items")
-}
 
 model Order {
   id          Int       @id @default(autoincrement())
@@ -403,4 +402,6 @@ model OrderCancellation {
   
   @@map("order_cancellations")
 }
+
+
 

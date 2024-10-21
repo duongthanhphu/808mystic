@@ -45,31 +45,32 @@ export default function ProductManage(){
     const loadCategories = async () => {
         setIsLoading(true);
         try {
-            const url = `http://localhost:4000/api/v1/categories/level/1?page=${pagination.currentPage}&pageSize=${pagination.pageSize}`;
+            // //0-0
+            // const url = `http://localhost:4000/api/v1/categories/level/1?page=${pagination.currentPage}&pageSize=${pagination.pageSize}`;
             
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            // const response = await fetch(url);
+            // if (!response.ok) {
+            //     throw new Error(`HTTP error! status: ${response.status}`);
+            // }
             
-            const data = await response.json();
+            // const data = await response.json();
             
-            if (!data.data || !Array.isArray(data.data)) {
-                throw new Error('Expected data.data to be an array');
-            }
+            // if (!data.data || !Array.isArray(data.data)) {
+            //     throw new Error('Expected data.data to be an array');
+            // }
             
-            setCategories(data.data);
+            // setCategories(data.data);
             
-            if (data.metadata) {
-                setPagination({
-                    currentPage: data.metadata.page || 1,
-                    totalPages: data.metadata.totalPages || 1,
-                    total: data.metadata.total || 0,
-                    pageSize: data.metadata.pageSize || 10
-                });
-            } else {
-                console.warn('No metadata received from API');
-            }
+            // if (data.metadata) {
+            //     setPagination({
+            //         currentPage: data.metadata.page || 1,
+            //         totalPages: data.metadata.totalPages || 1,
+            //         total: data.metadata.total || 0,
+            //         pageSize: data.metadata.pageSize || 10
+            //     });
+            // } else {
+            //     console.warn('No metadata received from API');
+            // }
             
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -137,6 +138,7 @@ export default function ProductManage(){
                 onClick={() => handleCategoryClick(category)}
                 >
                 <Text>{category.name}</Text>
+                {attributes}
                 </Paper>
             ))}
             </SimpleGrid>
@@ -177,12 +179,11 @@ export default function ProductManage(){
 
     const loadAttributes = async (categoryId) => {
         setIsLoading(true);
-        console.log(categoryId)
         try {
-            console.log(categoryId)
+            //0-0
             const response = await fetch(`http://localhost:4000/api/v1/categories/${categoryId}/attributes?page=1&pageSize=10`);
             const data = await response.json();
-            console.log(data)
+            console.log("1",data.data[0])
             setAttributes(data.data);
         } catch (error) {
             console.error('Error loading attributes:', error);
@@ -193,20 +194,30 @@ export default function ProductManage(){
     const AttributesList = ({ attributes }) => (
     <Stack>
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 2, xl: 2 }} spacing="xs" className='my-3'>
-            {attributes.map((attribute) => (
-                attribute.formType === 'Select' && (
+            {attributes && attributes.map((attribute) => (
+                attribute.formType === 'Select' && attribute.value && Array.isArray(attribute.value) && (
                     <Select
                         key={attribute.id}
                         label={attribute.formName}
                         placeholder="Chọn một giá trị"
-                        data={attribute.value[0].originName.map(item => ({ value: item.id.toString(), label: item.name }))}
+                        data={
+                            attribute.value
+                                .map(item => {
+                                    const [key, val] = Object.entries(item)[0];
+                                    return { value: key, label: val };
+                                })
+                                .filter(option => option.value !== "") // Loại bỏ giá trị rỗng
+                                .filter((option, index, self) =>
+                                    index === self.findIndex(o => o.value === option.value) // Loại bỏ giá trị trùng lặp
+                                )
+                        }
                         required={attribute.require}
                     />
                 )
             ))}
         </SimpleGrid>
     </Stack>
-    );
+);
 
 
     const [productName, setProductName] = useState('');
@@ -339,14 +350,15 @@ export default function ProductManage(){
                                 <Anchor key={item.id} onClick={() => handleBreadcrumbClick(index)}>
                                     {item.title} 
                                 </Anchor>
+                                
                             ))}
                             {selectedCategory.name}
                             </Breadcrumbs>
-                            
+                            <AttributesList attributes={attributes} />
                             {isLoading ? (
                                 <Loader size="sm" />
                             ) : (
-                                <AttributesList attributes={attributes} />
+                                <h1>Không có dữ liêu</h1>
                             )}
                         </div>
                     )}

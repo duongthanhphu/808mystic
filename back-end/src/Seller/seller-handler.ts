@@ -1,17 +1,18 @@
 import { Request, Response } from 'express';
 import {  Prisma, UserType, UserStatus, User, SellerStatus } from '@prisma/client';
 import prismaService from '../prisma.service';
+import { createGHTKShop } from '../Order/GHTK/ghtk-service';
 import passwordBcrypt from '../Utils/bcrypt'
 import jwt from 'jsonwebtoken';
-
+import { countProductsBySeller, getProductsBySeller } from './seller-queries';
 
 export const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
-    const { username, storeName, password, pickUpAddress, email, provinceId, districtId, wardId } = req.body;
-
-    if (!username || !storeName || !pickUpAddress || !email && !(provinceId && districtId && wardId)) {
+    const { username, storeName, password, pickUpAddress, email, provinceId, districtId, wardId, phone } = req.body;
+    console.log(req.body)
+    if (!username || !storeName || !pickUpAddress || !email || !phone || !(provinceId && districtId && wardId)) {
         return res
-        .status(400)
-        .json({ error: 'Missing required username or storeName or pickUpAddress or email  or complete address ' });
+            .status(400)
+            .json({ error: 'Missing required fields: username, storeName, pickUpAddress, email, phone or complete address' });
     }
 
     try {
@@ -24,6 +25,7 @@ export const registerOrUpgradeToSeller = async (req: Request, res: Response) => 
                 where: { id: existingUser.id },
                 data: {
                     userType: UserType.SELLER,
+                    phone, 
                     seller: {
                         create: {
                             storeName,
@@ -57,6 +59,25 @@ export const registerOrUpgradeToSeller = async (req: Request, res: Response) => 
                 }
             });
 
+            // try {
+            //     // Create GHTK shop for existing user
+            //     const ghtkResponse = await createGHTKShop(updatedUser.seller!.id, updatedUser.addresses[0]);
+                
+            //     // Update seller with GHTK shop ID if available
+            //     if (ghtkResponse.success && ghtkResponse.data?.shop_id) {
+            //         await prismaService.seller.update({
+            //             where: { id: updatedUser.seller!.id },
+            //             data: {
+            //                 ghtkShopId: ghtkResponse.data.shop_id
+            //             }
+            //         });
+            //     }
+            //     console.log(ghtkResponse)
+            // } catch (ghtkError) {
+            //     console.error('Failed to create GHTK shop:', ghtkError);
+                
+            // }
+
             return res.status(200).json({
                 message: "User upgraded to seller successfully.",
                 userId: updatedUser.id,
@@ -64,15 +85,16 @@ export const registerOrUpgradeToSeller = async (req: Request, res: Response) => 
                 sellerAddress: updatedUser.seller?.addresses[0]
             });
         } else {
-            // Nếu người dùng chưa tồn tại, tạo mới và đặt làm Seller
-            if (!password) return res.status(400).json({ error: 'Password is required for new user registration' });
-            
-            
+            if (!password) {
+                return res.status(400).json({ error: 'Password is required for new user registration' });
+            }
+
             const passwordClient = passwordBcrypt.passwordGenerate(password);
             const newUser = await prismaService.user.create({
                 data: {
                     username,
                     email,
+                    phone, // Add phone number
                     passwordSalt: passwordClient.salt,
                     passwordHash: passwordClient.hash,
                     passwordIterations: 10000,
@@ -113,6 +135,25 @@ export const registerOrUpgradeToSeller = async (req: Request, res: Response) => 
                     }
                 }
             });
+
+            // try {
+            //     // Create GHTK shop for new user
+            //     const ghtkResponse = await createGHTKShop(newUser.seller!.id, newUser.addresses[0]);
+                
+            //     // Update seller with GHTK shop ID if available
+            //     if (ghtkResponse.success && ghtkResponse.data?.shop_id) {
+            //         await prismaService.seller.update({
+            //             where: { id: newUser.seller!.id },
+            //             data: {
+            //                 ghtkShopId: ghtkResponse.data.shop_id
+            //             }
+            //         });
+            //     }
+            //     console.log(ghtkResponse)
+            // } catch (ghtkError) {
+            //     console.error('Failed to create GHTK shop:', ghtkError);
+            //     // Continue with the response but log the error
+            // }
 
             return res.status(201).json({
                 message: "New seller account created successfully.",
@@ -185,8 +226,55 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
+const getShopDetails = async (req: Request, res: Response) => {
+    const { sellerId } = req.params;
+    console.log(sellerId)
+    try {
+        const seller = await prismaService.seller.findUnique({
+            where: { id: Number(sellerId) },
+            include: { user: true } // Bao gồm thông tin người dùng
+        });
+
+        if (!seller) {
+            return res.status(404).json({ error: 'Shop not found' });
+        }
+
+        res.status(200).json({
+            shop: {
+                id: seller.id,
+                storeName: seller.storeName,
+                email: seller.email,
+                phone: seller.user.phone,
+                productCount: await countProductsBySeller(seller.id),
+                // createdAt: seller.createdAt
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching shop details:', error);
+        res.status(500).json({ error: 'Error fetching shop details' });
+    }
+};
+const getProductsForShop = async (req: Request, res: Response) => {
+    const { sellerId } = req.params;
+    console.log(sellerId)
+    try {
+        const products = await getProductsBySeller(Number(sellerId));
+
+        res.status(200).json({
+            products
+        });
+    } catch (error) {
+        console.error('Error fetching products for shop:', error);
+        res.status(500).json({ error: 'Error fetching products for shop' });
+    }
+};
+
 export default {
     registerOrUpgradeToSeller,
-    login
+    login,
+    getShopDetails,
+    getProductsForShop
 }
+
+
 

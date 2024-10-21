@@ -3,6 +3,8 @@ export interface Product {
     name: string;
     categoryId: number;
     sellerId: number;
+    shortDescription: string;
+    longDescription: string;
     hasClassification: boolean;
     slug: string;
     status: string;
@@ -19,21 +21,29 @@ export interface AttributeValue {
 }
 
 export interface ClassificationGroup {
-    id: number;
+    id?: number;
     name: string;
-    options: ClassificationOption[];
-}
-
-export interface ClassificationOption {
-    id: number;
-    name: string;
-    productClassifications: ProductClassification[];
+    options: string[];
 }
 
 export interface ProductClassification {
     id?: number;
-    optionIds: number[];  
+    [key: string]: any;  // Cho phép các trường động như option1, option2, etc.
     price: number;
     stock: number;
-    sku: string;
+}
+
+export interface ProductFilterQuery {
+    search?: string;
+    categoryId?: number;
+    sellerId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    attributes?: Array<{
+        attributeId: number;
+        values: any[];
+    }>;
+    status?: string;
+    sortBy?: 'price' | 'createdAt' | 'name';
+    sortOrder?: 'asc' | 'desc';
 }

@@ -34,6 +34,8 @@ import ClientSignIn from './Pages/ClientSignIn/ClientSignIn'
 import ClientSignUp from './Pages/ClientSignUp/ClientSignUp'
 import HomePage from './Pages/HomePage'; 
 import ProductDetail from './Pages/ProductDetail'
+import ShopDetail from './Pages/ShopDetail'; 
+import OrderConfirmation from './Pages/ConfirmOrder';
 
 function App() {
     return (
@@ -45,7 +47,7 @@ function App() {
                     <Routes>            
                         <Route path="/admin" element={<DefaultShell />}>
                                 <Route index element={<AdminDashboard />} />
-                                <Route path="category" element={<CategoryManage />} />
+                                <Route path="category" element={<CategoryCreate />} />
                                 <Route path="category/create" element={<CategoryCreate />} />
                                 <Route path="category/update/:id" element={<CategoryUpdate />} />
                                 <Route path="product" element={<ProductManage />} />
@@ -65,6 +67,8 @@ function App() {
                             <Route path="product/:id" element={<ProductDetail />} />
                             <Route path="seller-register" element={<SellerRegister />} />
                             <Route path="seller-login" element={<SellerLogin />} />
+                            <Route path="/shop/:sellerId" element={<ShopDetail/>} />
+                            <Route path="/order-confirmation" element={<OrderConfirmation/>} />
                         </Route>
                     </Routes>
                 </Router>

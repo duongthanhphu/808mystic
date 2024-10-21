@@ -1,23 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-
     Container,
     Group,
     Flex,
     Title,
-    Paper,
     Text,
     Button,
     SimpleGrid,
     Image ,
-    Card, 
-    Stack,
     Pagination
 } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { Carousel } from '@mantine/carousel';
 import ClientHeader from '../Components/ClientHeader/ClientHeader';
+import { Carousel } from '@mantine/carousel';
 import ClientFooter from '../Components/ClientFooter/ClientFooter';
+import axios from 'axios';
 
 export default function HomePage(){
     const navigate = useNavigate();
@@ -32,28 +29,31 @@ export default function HomePage(){
     useEffect(() => {
         fetchProducts();
     }, [pagination.currentPage, pagination.pageSize]);
+
     const fetchProducts = async () => {
         try {
-            const response = await fetch(`http://localhost:4000/api/v1/products?page=${pagination.currentPage}&pageSize=${pagination.pageSize}`);
-            const data = await response.json();
-            setProducts(data.data);
-            setPagination(prev => ({
-                ...prev,
-                totalPages: data.metadata.totalPages,
-                total: data.metadata.total
-            }));
+            const productsResp = await axios.get(`http://localhost:4000/api/v1/products?page=${pagination.currentPage}&pageSize=${pagination.pageSize}`);
+    
+            if (productsResp.status === 200 && productsResp.statusText === "OK") {
+                const productFromServer = productsResp.data.products.data
+                const productMetadata = productsResp.data.products.metadata
+                setProducts(productFromServer);
+                if (productMetadata) {
+                    setPagination(prev => ({
+                        ...prev,
+                        totalPages: productMetadata.totalPages,
+                        total: productMetadata.total
+                    }));
+                }
+            } 
         } catch (error) {
             console.error('Error fetching products:', error);
         }
     };
     const handleProductClick = async (productId) => {
         try {
-            const response = await fetch(`http://localhost:4000/api/v1/products/${productId}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const productData = await response.json();
-            navigate(`/product/${productId}`, { state: { productData } });
+            console.log(productId)
+            navigate(`/product/${productId}`, { state: { productId } });
         } catch (error) {
             console.error('Error fetching product details:', error);
         }
@@ -79,21 +79,7 @@ export default function HomePage(){
                     <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
                         1
                     </div>
-                    <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
-                        2
-                    </div>
-                    <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
-                        3
-                    </div>
-                    <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
-                        4
-                    </div>
-                    <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
-                        5
-                    </div>
-                    <div className='shadown-lg border bottom-1 rounded-md min-h-16 text-center'>
-                        6
-                    </div>
+                    
                     
 
             </SimpleGrid>
@@ -150,8 +136,6 @@ export default function HomePage(){
                         className='my-5' 
                     />
         </Container>
-        <Container fluid className='shadow-md py-2'>
-                <ClientFooter />
-        </Container>
+        <ClientFooter />
     </>
 }

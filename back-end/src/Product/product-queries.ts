@@ -18,20 +18,20 @@ const findAll = async (page: number = 1, pageSize: number = 10): Promise<Paginat
                                     attribute: true
                                 }
                             }
+                        }   
+                    },
+                    classificationGroups: {
+                        include: {
+                            options: true
                         }
                     },
-                    // classificationGroups: {
-                    //     include: {
-                    //         options: true
-                    //     }
-                    // },
-                    // classifications: {
-                    //     include: {
-                    //         option1: true,
-                    //         option2: true
-                    //     }
-                    // },
-                    // images: true
+                    classifications: {
+                        include: {
+                            option1: true,
+                            option2: true
+                        }
+                    },
+                    images: true
                 },
                 skip,
                 take,
@@ -53,6 +53,11 @@ const findProductDetail = async (productId: number) => {
     const product = await prismaService.product.findUnique({
         where: { id: productId },
         include: {
+            seller: {
+                include: {
+                    seller: true
+                }
+            },
             category: true,
             ProductAttributeValue: {
                 include: {

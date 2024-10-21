@@ -7,7 +7,7 @@ const findAllCategoryHandler = async (req: Request, res: Response) => {
         const result = await query.findAll(Number(page), Number(pageSize));
         res.json({
             message: 'success',
-            ...result
+            categories: result
         });
     } catch (error) {
         res.status(500).json({
@@ -22,7 +22,7 @@ const findByIdCategoryHandler = async (req: Request, res: Response) => {
         const categoryFromServer = await query.findByid(id);
         res.json({
             message: 'success',
-            category: categoryFromServer
+            categories: categoryFromServer
         });
     } catch (error) {
         res.status(500).json({
@@ -38,7 +38,7 @@ const findByLevelCategoryHandler = async (req: Request, res: Response) => {
         const result = await query.findByLevel(level, Number(page), Number(pageSize));
         res.json({
             message: 'success',
-            ...result
+            categories: result
         });
     } catch (error) {
         res.status(500).json({

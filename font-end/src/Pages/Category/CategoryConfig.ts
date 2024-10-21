@@ -33,32 +33,32 @@ export default class CategoryConfigs extends Configs implements CategoryConfigsT
     
     static properties = {
         name: {
-        label: 'Tên danh mục sản phẩm',
-        type: 'string',
-        isShowInTable: true,
+            label: 'Tên danh mục sản phẩm',
+            type: 'string',
+            isShowInTable: true,
         },
         slug: {
-        label: 'Slug danh mục sản phẩm',
-        type: 'string',
-        isShowInTable: true,
+            label: 'Slug danh mục sản phẩm',
+            type: 'string',
+            isShowInTable: true,
         },
         description: {
-        label: 'Mô tả danh mục sản phẩm',
-        type: 'string',
+            label: 'Mô tả danh mục sản phẩm',
+            type: 'string',
         },
         thumbnail: {
-        label: 'Hình đại diện',
-        type: 'string',
-        isShowInTable: true,
+            label: 'Hình đại diện',
+            type: 'string',
+            isShowInTable: true,
         },
         parentCategoryId: {
-        label: 'Danh mục cha',
-        type: 'number',
+            label: 'Danh mục cha',
+            type: 'number',
         },
         status: {
-        label: 'Trạng thái danh mục sản phẩm',
-        type: 'number',
-        isShowInTable: true,
+            label: 'Trạng thái danh mục sản phẩm',
+            type: 'number',
+            isShowInTable: true,
         },
     };
 
