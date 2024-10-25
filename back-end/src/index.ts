@@ -3,16 +3,17 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import PATH from './app.config'
 import {
-    categoryRouter,
-    categoryAttributeRouter,
-    imageRouter,
-    productRouter,
-    userRouter,
-    cartRouter,
-    orderRouter,
-    addressRouter,
-    sellerRouter
-} from './routes';
+  categoryRouter,
+  categoryAttributeRouter,
+  imageRouter,
+  productRouter,
+  userRouter,
+  cartRouter,
+  orderRouter,
+  addressRouter,
+  sellerRouter,
+  userUpdateRouter,
+} from "./routes";
 import { loadCategories, loadAddresses } from './seeds';
 
 // Uncomment these lines if you want to run the seed functions to initial Data
@@ -41,6 +42,8 @@ const configureRoutes = (app: express.Application) => {
     app.use(PATH.ORDER, orderRouter);
     app.use(PATH.ADDRESS, addressRouter);
     app.use(PATH.SELLER, sellerRouter);
+    app.use(PATH.USERUPDATE, userUpdateRouter);
+
 };
 
 const initializeServer = () => {

@@ -17,10 +17,19 @@ const findAll = async () => {
 const findById = async (id: string) => {
     try {
         return await prismaService.user.findUnique({
-            where: {
-                id: Number(id)
+          where: {
+            id: Number(id),
+          },
+          include: {
+            addresses: {
+              include: {
+                province: true, // Thêm để lấy thông tin province
+                district: true, // Thêm để lấy thông tin district
+                ward: true, // Thêm để lấy thông tin ward
+              },
             },
-        })
+          },
+        });
     }catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);

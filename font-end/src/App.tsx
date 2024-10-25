@@ -26,7 +26,8 @@ import CreateProduct from './Pages/Seller/SellerProductManage/CreateProduct'
 import ManageProduct from './Pages/Seller/SellerProductManage/ManageProduct'
 import UpdateProduct from './Pages/Seller/SellerProductManage/UpdateProduct'
 
-
+//Buyer
+import Dashboard from './Pages/UserProfile/Dashboard'
 
 
 // Client
@@ -36,46 +37,56 @@ import HomePage from './Pages/HomePage';
 import ProductDetail from './Pages/ProductDetail'
 import ShopDetail from './Pages/ShopDetail'; 
 import OrderConfirmation from './Pages/ConfirmOrder';
-
+import CategoryFilter from './Pages/CategoryFilter';
+// Cart
+import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart"
 function App() {
     return (
-        
-        <MantineProvider >
-            <Notifications />
-            <ModalsProvider>
-                <Router>
-                    <Routes>            
-                        <Route path="/admin" element={<DefaultShell />}>
-                                <Route index element={<AdminDashboard />} />
-                                <Route path="category" element={<CategoryCreate />} />
-                                <Route path="category/create" element={<CategoryCreate />} />
-                                <Route path="category/update/:id" element={<CategoryUpdate />} />
-                                <Route path="product" element={<ProductManage />} />
-                        </Route>
-                        <Route path="/seller" element={<SellerShell />}>
-                                <Route index element={<SellerDashboard />} />
-                                <Route path="product/create" element={<CreateProduct />} />
-                                <Route path="product/update/:id" element={<UpdateProduct />} />
-                                <Route path="product" element={<ManageProduct />} />
-                        </Route>    
+      <MantineProvider>
+        <Notifications />
+        <ModalsProvider>
+          <Router>
+            <Routes>
+              <Route path="/admin" element={<DefaultShell />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="category" element={<CategoryCreate />} />
+                <Route path="category/create" element={<CategoryCreate />} />
+                <Route
+                  path="category/update/:id"
+                  element={<CategoryUpdate />}
+                />
+                <Route path="product" element={<ProductManage />} />
+              </Route>
+              <Route path="/seller" element={<SellerShell />}>
+                <Route index element={<SellerDashboard />} />
+                <Route path="product/create" element={<CreateProduct />} />
+                <Route path="product/update/:id" element={<UpdateProduct />} />
+                <Route path="product" element={<ManageProduct />} />
+              </Route>
 
-                        <Route>
-                            <Route index element={<HomePage />} />
-                            <Route path="signin" element={<ClientSignIn />} />
-                            <Route path="signup" element={<ClientSignUp />} />
-                            <Route path="homepage" element={<HomePage />} />
-                            <Route path="product/:id" element={<ProductDetail />} />
-                            <Route path="seller-register" element={<SellerRegister />} />
-                            <Route path="seller-login" element={<SellerLogin />} />
-                            <Route path="/shop/:sellerId" element={<ShopDetail/>} />
-                            <Route path="/order-confirmation" element={<OrderConfirmation/>} />
-                        </Route>
-                    </Routes>
-                </Router>
-            </ModalsProvider>
-                
-        </MantineProvider>
-    )
+              <Route>
+                <Route index element={<HomePage />} />
+                <Route path="signin" element={<ClientSignIn />} />
+                <Route path="signup" element={<ClientSignUp />} />
+                <Route path="homepage" element={<HomePage />} />
+                <Route path="product/:id" element={<ProductDetail />} />
+                <Route path="seller-register" element={<SellerRegister />} />
+                <Route path="seller-login" element={<SellerLogin />} />
+                <Route path="/shop/:sellerId" element={<ShopDetail />} />
+                <Route
+                  path="/order-confirmation"
+                  element={<OrderConfirmation />}
+                />
+                <Route path="/category-filter" element={<CategoryFilter />} />
+                <Route path="/shopping-cart" element={<ShoppingCart />} />
+
+                <Route path="profile" element={<Dashboard />} />
+              </Route>
+            </Routes>
+          </Router>
+        </ModalsProvider>
+      </MantineProvider>
+    );
 }
 
 export default App

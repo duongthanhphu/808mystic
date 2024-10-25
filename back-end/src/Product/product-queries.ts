@@ -1,7 +1,8 @@
 import prismaService from "../prisma.service";
 import { Prisma } from '@prisma/client';
 import { paginateQuery, PaginationResult } from "../Utils/PaginationUtils";
-
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 
 const findAll = async (page: number = 1, pageSize: number = 10): Promise<PaginationResult<any>> => {
@@ -111,8 +112,25 @@ const createProduct = async (data: Prisma.ProductUncheckedCreateInput) => {
         }
     }
 }
+
+const findProductsByCategory = async (categoryId: string) => {
+  return await prisma.product.findMany({
+    where: {
+      categoryId: Number(categoryId),
+      status: "available",
+    },
+    include: {
+      ProductAttributeValue: {
+        include: {
+          attributeValue: true,
+        },
+      },
+    },
+  });
+};
 export default {
-    findAll,
-    createProduct,
-    findProductDetail
-}
+  findAll,
+  createProduct,
+  findProductDetail,
+  findProductsByCategory,
+};

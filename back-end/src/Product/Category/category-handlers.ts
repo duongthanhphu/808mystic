@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import query from './category-queries';
-
+import productQuery from "../product-queries";
 const findAllCategoryHandler = async (req: Request, res: Response) => {
     const { page = 1, pageSize = 10 } = req.query;
     try {
@@ -77,10 +77,60 @@ const findCategoryAttributesByIdHandler = async (req: Request, res: Response) =>
     }
 };
 
+const filterProductByCategory = async (req: Request, res: Response) => {
+  const categoryId = req.params.id  // lấy categoryId từ query params
+  const filterAttributes = req.query; // lấy toàn bộ thuộc tính từ query params (color, size, v.v.)
+
+  try {
+    // 1. Lấy tất cả sản phẩm trong category
+    const products = await productQuery.findProductsByCategory(categoryId);
+
+    // 2. Lọc sản phẩm dựa trên attributes (ví dụ: color, size)
+    let filteredProducts = products;
+
+    // Duyệt qua tất cả các attribute trong query để filter
+    for (const [key, value] of Object.entries(filterAttributes)) {
+      if (key !== "categoryId") {
+        filteredProducts = filteredProducts.filter((product) =>
+          product.ProductAttributeValue.some((attrValue) => {
+            // Kiểm tra attributeValue.value không phải là null
+            if (attrValue.attributeValue && attrValue.attributeValue.value) {
+              const attributeValue = attrValue.attributeValue.value;
+
+              // Kiểm tra xem attributeValue có phải là một object (JsonObject)
+              if (
+                typeof attributeValue === "object" &&
+                !Array.isArray(attributeValue)
+              ) {
+                // Kiểm tra giá trị tương ứng với key
+                return attributeValue[key] === value;
+              }
+            }
+            return false;
+          })
+        );
+      }
+    }
+
+    // 3. Trả về kết quả lọc
+    res.json({
+      message: "success",
+      filteredProducts,
+    });
+  } catch (error) {
+    console.error("Error filtering products:", error);
+    res.status(500).json({
+      error: "Error filtering products",
+    });
+  }
+};
+
+
 export default {
-    findAllCategoryHandler,
-    findByIdCategoryHandler,
-    findByLevelCategoryHandler,
-    deleteCategoryHandler,
-    findCategoryAttributesByIdHandler
+  findAllCategoryHandler,
+  findByIdCategoryHandler,
+  findByLevelCategoryHandler,
+  deleteCategoryHandler,
+  findCategoryAttributesByIdHandler,
+  filterProductByCategory,
 };

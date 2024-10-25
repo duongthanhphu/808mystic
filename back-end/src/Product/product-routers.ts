@@ -34,6 +34,6 @@ router
   .get('/', handler.findAllHandler)
   .get('/:id', handler.findByIdHandler)
   .post('/', upload.array('images', 10), handler.createProductHandler)
-  .post('/image/', upload.array('images', 10), handler.imageTester);
+  .post('/image/', upload.array('images', 10), handler.imageTester)
 
 export default router;

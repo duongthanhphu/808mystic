@@ -73,6 +73,8 @@ CREATE TABLE "products" (
     "name" VARCHAR(200) NOT NULL,
     "categoryId" INTEGER NOT NULL,
     "sellerId" INTEGER NOT NULL,
+    "shortDescription" VARCHAR(200),
+    "longDescription" VARCHAR(200),
     "hasClassification" BOOLEAN NOT NULL DEFAULT false,
     "slug" VARCHAR(100),
     "status" TEXT NOT NULL DEFAULT 'available',
@@ -142,7 +144,7 @@ CREATE TABLE "users" (
     "userType" "UserType" NOT NULL DEFAULT 'CUSTOMER',
     "status" "UserStatus" NOT NULL DEFAULT 'AVAILABLE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
     "provinceCode" TEXT,
     "districtCode" TEXT,
@@ -150,6 +152,29 @@ CREATE TABLE "users" (
     "address" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sellers" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "storeName" VARCHAR(100) NOT NULL,
+    "pickupAddress" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(100) NOT NULL,
+    "shippingSettings" JSONB,
+    "taxInformation" JSONB,
+    "identificationCode" VARCHAR(50),
+    "approvedAt" TIMESTAMP(3),
+    "ghtkShopId" TEXT,
+    "ghtkToken" TEXT,
+    "ghtkShopCreatedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "deletedAt" TIMESTAMP(3),
+    "status" "SellerStatus" NOT NULL DEFAULT 'PENDING',
+    "userType" "UserType" NOT NULL DEFAULT 'CUSTOMER',
+
+    CONSTRAINT "sellers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -176,26 +201,6 @@ CREATE TABLE "Address" (
     "delete_at" TIMESTAMP(3),
 
     CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "sellers" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "storeName" VARCHAR(100) NOT NULL,
-    "pickupAddress" VARCHAR(255) NOT NULL,
-    "email" VARCHAR(100) NOT NULL,
-    "shippingSettings" JSONB,
-    "taxInformation" JSONB,
-    "identificationCode" VARCHAR(50),
-    "approvedAt" TIMESTAMP(3),
-    "ghtkShopId" TEXT,
-    "ghtkToken" TEXT,
-    "ghtkShopCreatedAt" TIMESTAMP(3),
-    "status" "SellerStatus" NOT NULL DEFAULT 'PENDING',
-    "userType" "UserType" NOT NULL DEFAULT 'CUSTOMER',
-
-    CONSTRAINT "sellers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -413,6 +418,9 @@ ALTER TABLE "product_classifications" ADD CONSTRAINT "product_classifications_op
 ALTER TABLE "product_classifications" ADD CONSTRAINT "product_classifications_option2Id_fkey" FOREIGN KEY ("option2Id") REFERENCES "classification_options"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "sellers" ADD CONSTRAINT "sellers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -429,9 +437,6 @@ ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "sellers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "sellers" ADD CONSTRAINT "sellers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "District" ADD CONSTRAINT "District_ProvinceCode_fkey" FOREIGN KEY ("ProvinceCode") REFERENCES "Province"("Code") ON DELETE RESTRICT ON UPDATE CASCADE;
