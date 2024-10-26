@@ -1,178 +1,169 @@
 import { Request, Response } from 'express';
-import {  Prisma, UserType, UserStatus, User, SellerStatus } from '@prisma/client';
+import { Prisma, UserType, UserStatus, SellerStatus, EmailVerificationStatus } from '@prisma/client';
+import { generateOTP, sendVerificationEmail } from '../Utils/EmailService';
 import prismaService from '../prisma.service';
-import { createGHTKShop } from '../Order/GHTK/ghtk-service';
-import passwordBcrypt from '../Utils/bcrypt'
+import passwordBcrypt from '../Utils/bcrypt';
 import jwt from 'jsonwebtoken';
-import { countProductsBySeller, getProductsBySeller } from './seller-queries';
 
-export const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
-    const { username, storeName, password, pickUpAddress, email, provinceId, districtId, wardId, phone } = req.body;
-    console.log(req.body)
-    if (!username || !storeName || !pickUpAddress || !email || !phone || !(provinceId && districtId && wardId)) {
-        return res
-            .status(400)
-            .json({ error: 'Missing required fields: username, storeName, pickUpAddress, email, phone or complete address' });
+const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
+    const { 
+        username, 
+        password, 
+        email, 
+        phone, 
+        storeName, 
+        pickUpAddress, 
+        provinceId, 
+        districtId, 
+        wardId 
+    } = req.body;
+    
+    if (!username || !email || !phone || !storeName || !pickUpAddress || !provinceId || !districtId || !wardId) {
+        return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
-
+    const passwordClient = passwordBcrypt.passwordGenerate(password);
     try {
-        const existingUser = await prismaService.user.findUnique({
-            where: { username }
-        });
-
-        if (existingUser) {
-            const updatedUser = await prismaService.user.update({
-                where: { id: existingUser.id },
-                data: {
+        const result = await prismaService.$transaction(async (prisma) => {
+            // Find or create User
+            const user = await prisma.user.upsert({
+                where: { email },
+                update: {
                     userType: UserType.SELLER,
-                    phone, 
-                    seller: {
-                        create: {
-                            storeName,
-                            pickupAddress: pickUpAddress,
-                            email,
-                            status: SellerStatus.PENDING,
-                            addresses: {
-                                create: {
-                                    provinceId,
-                                    districtId,
-                                    wardId
-                                }
-                            }
-                        }
-                    },
-                    addresses: {
-                        create: {
-                            provinceId,
-                            districtId,
-                            wardId
-                        }
-                    }
+                    status: UserStatus.UNAVAILABLE,
                 },
-                include: {
-                    addresses: true,
-                    seller: {
-                        include: {
-                            addresses: true
-                        }
-                    }
-                }
-            });
-
-            // try {
-            //     // Create GHTK shop for existing user
-            //     const ghtkResponse = await createGHTKShop(updatedUser.seller!.id, updatedUser.addresses[0]);
-                
-            //     // Update seller with GHTK shop ID if available
-            //     if (ghtkResponse.success && ghtkResponse.data?.shop_id) {
-            //         await prismaService.seller.update({
-            //             where: { id: updatedUser.seller!.id },
-            //             data: {
-            //                 ghtkShopId: ghtkResponse.data.shop_id
-            //             }
-            //         });
-            //     }
-            //     console.log(ghtkResponse)
-            // } catch (ghtkError) {
-            //     console.error('Failed to create GHTK shop:', ghtkError);
-                
-            // }
-
-            return res.status(200).json({
-                message: "User upgraded to seller successfully.",
-                userId: updatedUser.id,
-                userAddress: updatedUser.addresses[0],
-                sellerAddress: updatedUser.seller?.addresses[0]
-            });
-        } else {
-            if (!password) {
-                return res.status(400).json({ error: 'Password is required for new user registration' });
-            }
-
-            const passwordClient = passwordBcrypt.passwordGenerate(password);
-            const newUser = await prismaService.user.create({
-                data: {
+                create: {
                     username,
                     email,
-                    phone, // Add phone number
-                    passwordSalt: passwordClient.salt,
-                    passwordHash: passwordClient.hash,
+                    phone,
+                    passwordSalt: password ? passwordClient.salt : '',
+                    passwordHash: password ? passwordClient.hash : '',
                     passwordIterations: 10000,
                     avatar: 'default_avatar.png',
                     fullName: username,
                     userType: UserType.SELLER,
-                    status: UserStatus.AVAILABLE,
+                    status: UserStatus.UNAVAILABLE,
                     emailVerified: false,
-                    seller: {
-                        create: {
-                            storeName,
-                            pickupAddress: pickUpAddress,
-                            email,
-                            status: SellerStatus.PENDING,
-                            addresses: {
-                                create: {
-                                    provinceId,
-                                    districtId,
-                                    wardId
-                                }
-                            }
-                        }
-                    },
-                    addresses: {
-                        create: {
-                            provinceId,
-                            districtId,
-                            wardId
-                        }
+                    emailVerificationStatus: EmailVerificationStatus.PENDING,
+                },
+            });
+            console.log(passwordBcrypt.comparePassword(password, user.passwordSalt, user.passwordHash));
+
+            // Find or create Seller
+            const seller = await prisma.seller.upsert({
+                where: { userId: user.id },
+                update: {
+                    storeName,
+                    pickupAddress: pickUpAddress,
+                    status: SellerStatus.PENDING,
+                },
+                create: {
+                    userId: user.id,
+                    storeName,
+                    pickupAddress: pickUpAddress,
+                    email: user.email || '',
+                    status: SellerStatus.PENDING,
+                },
+            });
+
+            await prisma.address.upsert({
+                where: { 
+                    userId_sellerId: {
+                        userId: user.id,
+                        sellerId: seller.id
                     }
                 },
-                include: {
-                    addresses: true,
-                    seller: {
-                        include: {
-                            addresses: true
-                        }
-                    }
+                update: {
+                    provinceId,
+                    districtId,
+                    wardId,
+                },
+                create: {
+                    userId: user.id,
+                    sellerId: seller.id,
+                    provinceId,
+                    districtId,
+                    wardId,
+                },
+            });
+
+            return { user, seller };
+        });
+
+        if (!result.user.emailVerified) {
+            const otp = generateOTP().substring(0, 4);
+            await prismaService.user.update({
+                where: { id: result.user.id },
+                data: { 
+                    otp,
+                    otpExpires: new Date(Date.now() + 15 * 60 * 1000)
                 }
             });
 
-            // try {
-            //     // Create GHTK shop for new user
-            //     const ghtkResponse = await createGHTKShop(newUser.seller!.id, newUser.addresses[0]);
-                
-            //     // Update seller with GHTK shop ID if available
-            //     if (ghtkResponse.success && ghtkResponse.data?.shop_id) {
-            //         await prismaService.seller.update({
-            //             where: { id: newUser.seller!.id },
-            //             data: {
-            //                 ghtkShopId: ghtkResponse.data.shop_id
-            //             }
-            //         });
-            //     }
-            //     console.log(ghtkResponse)
-            // } catch (ghtkError) {
-            //     console.error('Failed to create GHTK shop:', ghtkError);
-            //     // Continue with the response but log the error
-            // }
+            await sendVerificationEmail(email, otp);
 
             return res.status(201).json({
-                message: "New seller account created successfully.",
-                userId: newUser.id,
-                userAddress: newUser.addresses[0],
-                sellerAddress: newUser.seller?.addresses[0]
+                message: "Vui lòng kiểm tra email để xác thực và hoàn tất đăng ký người bán.",
+                userId: result.user.id
+            });
+        } else {
+            return res.status(200).json({
+                message: "Tài khoản đã được nâng cấp thành người bán thành công",
+                sellerId: result.seller.id
             });
         }
     } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            if (error.code === 'P2002') {
-                res.status(400).json({ error: 'Username or email already exists' });
-            } else {
-                res.status(400).json({ error: 'Invalid user data' });
-            }
-        } else {
-            console.error('Error in user registration or upgrade:', error);
-            res.status(500).json({ error: 'Error processing request' });
+        console.error('Lỗi trong quá trình đăng ký/nâng cấp người bán:', error);
+        return res.status(500).json({ error: 'Lỗi xử lý yêu cầu', details: error });
+    }
+};
+
+const verifyEmailAndActivateSeller = async (req: Request, res: Response) => {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await prismaService.user.findUnique({
+            where: { email },
+            include: { seller: true }
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
         }
+
+        if (user.emailVerified) {
+            return res.status(400).json({ success: false, message: 'Email đã được xác thực trước đó' });
+        }
+
+        if (user.otp !== otp || (user.otpExpires && user.otpExpires < new Date())) {
+            return res.status(400).json({ success: false, message: 'Mã OTP không chính xác hoặc đã hết hạn' });
+        }
+
+        const updatedUser = await prismaService.user.update({
+            where: { id: user.id },
+            data: { 
+                emailVerified: true,
+                status: UserStatus.AVAILABLE,
+                userType: UserType.SELLER,
+                otp: null,
+                otpExpires: null,
+                emailVerificationStatus: EmailVerificationStatus.VERIFIED,
+                seller: {
+                    update: {
+                        status: SellerStatus.APPROVED
+                    }
+                }
+            },
+            include: { seller: true }
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Email đã được xác thực và tài khoản người bán đã được kích hoạt thành công',
+            sellerId: updatedUser.seller?.id
+        });
+    } catch (error) {
+        console.error('Lỗi khi xác thực email và kích hoạt tài khoản người bán:', error);
+        res.status(500).json({ success: false, message: 'Đã xảy ra lỗi khi xử lý yêu cầu' });
     }
 };
 
@@ -180,101 +171,213 @@ const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
     const accessTokenFromEnv: string | undefined = process.env.ACCESS_TOKEN;
     const refreshTokenFromEnv: string | undefined = process.env.REFRESH_TOKEN;
-    
+    console.log('Thông tin đăng nhập:', { username, password });
+
     try {
-        const user = await prismaService.user.findUnique({ where: { username } });
-        if (user && passwordBcrypt.comparePassword(password, user.passwordSalt, user.passwordHash)) {
+        const user = await prismaService.user.findUnique({ 
+            where: { 
+                username: username
+            } 
+        });
 
-            if (!accessTokenFromEnv) return res.status(500).json({ error: 'Internal server error' });
-            if (!refreshTokenFromEnv) return res.status(500).json({ error: 'Internal server error' });
-            
-
-            const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '15m' });
-            const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
-            const session = await prismaService.session.create({
-                    data: {
-                        userId: user.id,
-                        refreshToken,
-                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
-                    }
-            });
-            res.cookie('accessToken', accessToken, {
-                httpOnly: false,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 60 * 60 * 1000 // 15 phút
-            });
-
-            res.cookie('refreshToken', refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
-            });
-
-
-            return res.status(200).json({ message: 'Đăng nhập thành công' }); 
+        if (!user) {
+            return res.status(401).json({ error: 'Không tìm thấy người dùng' });
         }
 
-        return res.status(401).json({ error: 'Sai mật khẩu hoặc tài khoản' });
+        console.log('Thông tin người dùng:', { 
+            passwordSalt: user.passwordSalt, 
+            passwordHash: user.passwordHash 
+        });
+
+        const isPasswordValid = passwordBcrypt.comparePassword(password, user.passwordSalt, user.passwordHash);
+        console.log('Kết quả kiểm tra mật khẩu:', isPasswordValid);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Mật khẩu không đúng' });
+        }
+
+        if (!accessTokenFromEnv || !refreshTokenFromEnv) {
+            return res.status(500).json({ error: 'Lỗi cấu hình máy chủ' });
+        }
+
+        const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '2d' });
+        const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
         
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ 
-            error: 'Error during login' 
-        });
-    }
-}
-
-const getShopDetails = async (req: Request, res: Response) => {
-    const { sellerId } = req.params;
-    console.log(sellerId)
-    try {
-        const seller = await prismaService.seller.findUnique({
-            where: { id: Number(sellerId) },
-            include: { user: true } // Bao gồm thông tin người dùng
+        await prismaService.session.create({
+            data: {
+                userId: user.id,
+                refreshToken,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày
+            }
         });
 
-        if (!seller) {
-            return res.status(404).json({ error: 'Shop not found' });
-        }
+        res.cookie('accessToken', accessToken, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 2 * 24 * 60 * 60 * 1000 // 2 ngày
+        });
 
-        res.status(200).json({
-            shop: {
-                id: seller.id,
-                storeName: seller.storeName,
-                email: seller.email,
-                phone: seller.user.phone,
-                productCount: await countProductsBySeller(seller.id),
-                // createdAt: seller.createdAt
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+        });
+
+        return res.status(200).json({ 
+            message: 'Đăng nhập thành công',
+            user: {
+                id: user.id,
+                email: user.email,
+                userType: user.userType,
+                username: user.username
             }
         });
     } catch (error) {
-        console.error('Error fetching shop details:', error);
-        res.status(500).json({ error: 'Error fetching shop details' });
+        console.error('Lỗi đăng nhập:', error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi khi xử lý yêu cầu đăng nhập', details: error });
     }
 };
-const getProductsForShop = async (req: Request, res: Response) => {
-    const { sellerId } = req.params;
-    console.log(sellerId)
-    try {
-        const products = await getProductsBySeller(Number(sellerId));
 
-        res.status(200).json({
-            products
+const getSellerDetails = async (req: Request, res: Response) => {
+    const { sellerId } = req.params;
+
+    try {
+        const seller = await prismaService.seller.findUnique({
+            where: { id: Number(sellerId) },
+            include: {
+                user: true,
+                addresses: {
+                    include: {
+                        province: true,
+                        district: true,
+                        ward: true
+                    }
+                }
+            }
+        });
+
+        if (!seller) {
+            return res.status(404).json({ error: 'Không tìm thấy người bán' });
+        }
+
+        const productCount = await prismaService.product.count({
+            where: { sellerId: seller.userId }
+        });
+
+        const sellerDetails = {
+            id: seller.id,
+            userId: seller.userId,
+            storeName: seller.storeName,
+            email: seller.email,
+            status: seller.status,
+            fullAddress: seller.addresses.length > 0 
+                ? `${seller.pickupAddress}, ${seller.addresses[0].ward.Name}, ${seller.addresses[0].district.Name}, ${seller.addresses[0].province.Name}`
+                : 'Chưa cập nhật địa chỉ',
+            joinDate: seller.createdAt,
+            totalProducts: productCount,
+            user: {
+                username: seller.user.username,
+                fullName: seller.user.fullName,
+                phone: seller.user.phone,
+                avatar: seller.user.avatar
+            }
+        };
+
+        res.status(200).json(sellerDetails);
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin chi tiết người bán:', error);
+        res.status(500).json({ error: 'Lỗi xử lý yêu cầu' });
+    }
+};
+
+const getSellerProducts = async (req: Request, res: Response) => {
+    const { sellerId } = req.params;
+
+    try {
+        const products = await prismaService.product.findMany({
+            where: { sellerId: Number(sellerId) },
+            include: {
+                images: true,
+                category: true,
+                classifications: {
+                    include: {
+                        option1: true,
+                        option2: true
+                    }
+                },
+                classificationGroups: {
+                    include: {
+                        options: true
+                    }
+                }
+            }
+        });
+
+        const formattedProducts = products.map(product => {
+            let minPrice = Infinity;
+            let maxPrice = 0;
+
+            if (product.hasClassification && product.classifications.length > 0) {
+                product.classifications.forEach(classification => {
+                    const price = Number(classification.price);
+                    if (price < minPrice) minPrice = price;
+                    if (price > maxPrice) maxPrice = price;
+                });
+            }
+
+            return {
+                id: product.id,
+                name: product.name,
+                shortDescription: product.shortDescription,
+                longDescription: product.longDescription,
+                slug: product.slug,
+                status: product.status,
+                categoryName: product.category.name,
+                hasClassification: product.hasClassification,
+                priceRange: product.hasClassification 
+                    ? `${minPrice.toLocaleString()} - ${maxPrice.toLocaleString()} đ`
+                    : product.classifications.length > 0
+                        ? `${Number(product.classifications[0].price).toLocaleString()} đ`
+                        : 'Liên hệ',
+                images: product.images.map(img => ({
+                    id: img.id,
+                    path: img.path,
+                    isThumbnail: img.isThumbnail
+                })),
+                classificationGroups: product.classificationGroups.map(group => ({
+                    id: group.id,
+                    name: group.name,
+                    options: group.options.map(option => ({
+                        id: option.id,
+                        name: option.name
+                    }))
+                })),
+                classifications: product.classifications.map(classification => ({
+                    id: classification.id,
+                    option1: classification.option1.name,
+                    option2: classification.option2 ? classification.option2.name : null,
+                    price: Number(classification.price).toLocaleString() + ' đ',
+                    stock: classification.stock
+                }))
+            };
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            products: formattedProducts
         });
     } catch (error) {
-        console.error('Error fetching products for shop:', error);
-        res.status(500).json({ error: 'Error fetching products for shop' });
+        console.error('Lỗi khi lấy sản phẩm của người bán:', error);
+        res.status(500).json({ success: false, error: 'Lỗi xử lý yêu cầu' });
     }
 };
 
 export default {
     registerOrUpgradeToSeller,
+    verifyEmailAndActivateSeller,
     login,
-    getShopDetails,
-    getProductsForShop
+    getSellerDetails,
+    getSellerProducts
 }
-
-
-

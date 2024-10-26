@@ -11,7 +11,8 @@ import {
     cartRouter,
     orderRouter,
     addressRouter,
-    sellerRouter
+    sellerRouter,
+    shipmentRouter
 } from './routes';
 import { loadCategories, loadAddresses } from './seeds';
 
@@ -41,6 +42,7 @@ const configureRoutes = (app: express.Application) => {
     app.use(PATH.ORDER, orderRouter);
     app.use(PATH.ADDRESS, addressRouter);
     app.use(PATH.SELLER, sellerRouter);
+    app.use(PATH.SHIPMENT, shipmentRouter);
 };
 
 const initializeServer = () => {

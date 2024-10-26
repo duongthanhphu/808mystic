@@ -43,8 +43,8 @@ export default function DefaultShell() {
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/seller-login">Đăng nhập</Link>
-                                    <Link to="/seller-register">Đăng ký</Link>
+                                    {/* <Link to="/seller-login">Đăng nhập</Link>
+                                    <Link to="/seller-register">Đăng ký</Link> */}
                                 </>
                             )}
                 <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />

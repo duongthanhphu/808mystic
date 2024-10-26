@@ -4,8 +4,10 @@ const router = express.Router()
 
 router
 .post('/register', handler.registerOrUpgradeToSeller)
+.get('/:sellerId/details', handler.getSellerDetails)
 .post('/login', handler.login)
-.get('/:sellerId', handler.getShopDetails) // Route xem chi tiết shop
-.get('/:sellerId/products', handler.getProductsForShop); // Route hiển thị tất cả sản phẩm của shop
+.post('/verify-email', handler.verifyEmailAndActivateSeller)
+.get('/:sellerId/products', handler.getSellerProducts);
+// .post('/resend-otp', handler.resendOTP);
 
 export default router;

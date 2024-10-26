@@ -10,25 +10,26 @@ import OrderConfirmation from './Pages/OrderConfirmation';
 const ShopDetail = () => {
     const { sellerId } = useParams();
     const [shop, setShop] = useState(null);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [products, setProducts] = useState([]);
 
     useEffect(() => {
         const fetchShopDetails = async () => {
             try {
-                const response = await axios.get(`http://localhost:4000/api/v1/sellers/${sellerId}`);
-                setShop(response.data.shop);
-                
-                const productsResponse = await axios.get(`http://localhost:4000/api/v1/sellers/${sellerId}/products`);
-                setProducts(productsResponse.data.products || []);
+                const [shopResponse, productsResponse] = await Promise.all([
+                    axios.get(`http://localhost:4000/api/v1/sellers/${sellerId}/details`),
+                    axios.get(`http://localhost:4000/api/v1/sellers/${sellerId}/products`)
+                ]);
+                setShop(shopResponse.data);
+                setProducts(productsResponse.data.products);
             } catch (err) {
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
-
+        
         fetchShopDetails();
     }, [sellerId]);
 
@@ -69,7 +70,7 @@ const ShopDetail = () => {
                                 </Group>
                                 <Group mt="xs">
                                     <IconCalendar size={16} />
-                                    <Text size="sm">Tham gia từ {new Date(shop.createdAt).toLocaleDateString()}</Text>
+                                    <Text size="sm">Tham gia từ {new Date(shop.joinDate).toLocaleDateString()}</Text>
                                 </Group>
                             </div>
                         </Group>
@@ -95,7 +96,7 @@ const ShopDetail = () => {
                                 <Text mt="md" lineClamp={2}>{product.name}</Text>
                                 <Group mt="md">
                                     <Badge color="pink" variant="light">
-                                        {product.price ? `${product.price.toLocaleString()} đ` : 'Liên hệ'}
+                                        {product.priceRange}
                                     </Badge>
                                     <Text size="sm">Đã bán: {product.soldCount || 0}</Text>
                                 </Group>

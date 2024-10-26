@@ -25,7 +25,12 @@ import SellerDashboard from './Pages/Seller/SellerDashboard/Dashboard'
 import CreateProduct from './Pages/Seller/SellerProductManage/CreateProduct'
 import ManageProduct from './Pages/Seller/SellerProductManage/ManageProduct'
 import UpdateProduct from './Pages/Seller/SellerProductManage/UpdateProduct'
-
+import SellerAddress from './Pages/Seller/SellerAddress/SellerAddress'
+import SellerShipping from './Pages/Seller/SellerAddress/SellerShipping'
+import SellerAddressConfig from './Pages/Seller/SellerAddress/SellerAddressConfig'
+import SellerCancelOrder from './Pages/Seller/SellerOrder/SellerCancelOrder'
+import SellerOrder from './Pages/Seller/SellerOrder/SellerOrder'
+import SellerBill from './Pages/Seller/SellerBill/SellerBill'
 
 
 
@@ -36,6 +41,8 @@ import HomePage from './Pages/HomePage';
 import ProductDetail from './Pages/ProductDetail'
 import ShopDetail from './Pages/ShopDetail'; 
 import OrderConfirmation from './Pages/ConfirmOrder';
+
+import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart"
 
 function App() {
     return (
@@ -57,6 +64,13 @@ function App() {
                                 <Route path="product/create" element={<CreateProduct />} />
                                 <Route path="product/update/:id" element={<UpdateProduct />} />
                                 <Route path="product" element={<ManageProduct />} />
+                                <Route path="/seller/dashboard" element={<SellerDashboard />} />
+                                <Route path="/seller/address" element={<SellerAddress />} />
+                                <Route path="/seller/address/shipping" element={<SellerShipping />} />
+                                <Route path="/seller/address/config" element={<SellerAddressConfig />} />
+                                <Route path="/seller/order" element={<SellerOrder />} />
+                                <Route path="/seller/order/cancel" element={<SellerCancelOrder />} />
+                                <Route path="/seller/bill" element={<SellerBill />} />
                         </Route>    
 
                         <Route>
@@ -69,6 +83,8 @@ function App() {
                             <Route path="seller-login" element={<SellerLogin />} />
                             <Route path="/shop/:sellerId" element={<ShopDetail/>} />
                             <Route path="/order-confirmation" element={<OrderConfirmation/>} />
+                                            <Route path="/shopping-cart" element={<ShoppingCart />} />
+
                         </Route>
                     </Routes>
                 </Router>

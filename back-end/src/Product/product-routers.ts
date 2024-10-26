@@ -4,17 +4,15 @@ import handler from './product-handlers';
 
 const router = express.Router();
 
-// Configure multer
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB
+    fileSize: 10 * 1024 * 1024, 
     files: 10
   }
 });
 
-// Error handling middleware for multer
 const handleMulterError = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -28,9 +26,9 @@ const handleMulterError = (err: any, req: express.Request, res: express.Response
   next(err);
 };
 
-router.use(handleMulterError);
 
 router
+  .use(handleMulterError)
   .get('/', handler.findAllHandler)
   .get('/:id', handler.findByIdHandler)
   .post('/', upload.array('images', 10), handler.createProductHandler)

@@ -7,4 +7,5 @@ export { default as cartRouter } from './Cart/cart-routers';
 export { default as orderRouter } from './Order/order-routers';
 export { default as addressRouter } from './User/Address/address-routers';
 export { default as sellerRouter } from './Seller/seller-routes';
+export { default as shipmentRouter } from './Shipment/shipment-routers';
 

@@ -14,12 +14,10 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Generate random 4-digit OTP
 const generateOTP = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
-// Send OTP email
 const sendVerificationEmail = async (email: string, otp: string) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -245,7 +243,7 @@ const signin = async (req: Request, res: Response) => {
                     data: {
                         userId: user.id,
                         refreshToken,
-                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 Ngày
                     }
             });
             res.cookie('accessToken', accessToken, {

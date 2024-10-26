@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "MeasurementUnit" AS ENUM ('GRAM', 'KILOGRAM', 'CENTIMETER', 'METER');
+
+-- CreateEnum
 CREATE TYPE "UserType" AS ENUM ('SELLER', 'CUSTOMER', 'ADMIN');
 
 -- CreateEnum
@@ -6,6 +9,12 @@ CREATE TYPE "UserStatus" AS ENUM ('AVAILABLE', 'UNAVAILABLE', 'BLOCKED');
 
 -- CreateEnum
 CREATE TYPE "SellerStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');
+
+-- CreateEnum
+CREATE TYPE "EmailVerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'SELLER_CONFIRMED', 'SELLER_REJECTED', 'SHIPPING', 'DELIVERED', 'CANCELLED', 'COMPLETED');
 
 -- CreateTable
 CREATE TABLE "categories" (
@@ -73,8 +82,16 @@ CREATE TABLE "products" (
     "name" VARCHAR(200) NOT NULL,
     "categoryId" INTEGER NOT NULL,
     "sellerId" INTEGER NOT NULL,
+    "shortDescription" VARCHAR(200),
+    "longDescription" VARCHAR(200),
     "hasClassification" BOOLEAN NOT NULL DEFAULT false,
     "slug" VARCHAR(100),
+    "weight" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "length" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "width" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "height" DOUBLE PRECISION NOT NULL DEFAULT 10,
+    "weightUnit" "MeasurementUnit" NOT NULL DEFAULT 'GRAM',
+    "sizeUnit" "MeasurementUnit" NOT NULL DEFAULT 'CENTIMETER',
     "status" TEXT NOT NULL DEFAULT 'available',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -137,12 +154,13 @@ CREATE TABLE "users" (
     "fullName" VARCHAR(100),
     "phone" TEXT,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "emailVerificationStatus" "EmailVerificationStatus" NOT NULL DEFAULT 'PENDING',
     "otp" VARCHAR(4),
     "otpExpires" TIMESTAMP(3),
     "userType" "UserType" NOT NULL DEFAULT 'CUSTOMER',
     "status" "UserStatus" NOT NULL DEFAULT 'AVAILABLE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3),
     "deletedAt" TIMESTAMP(3),
     "provinceCode" TEXT,
     "districtCode" TEXT,
@@ -150,6 +168,29 @@ CREATE TABLE "users" (
     "address" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sellers" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "storeName" VARCHAR(100) NOT NULL,
+    "pickupAddress" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(100) NOT NULL,
+    "shippingSettings" JSONB,
+    "taxInformation" JSONB,
+    "identificationCode" VARCHAR(50),
+    "businessLicense" TEXT,
+    "approvedAt" TIMESTAMP(3),
+    "ghtkShopId" TEXT,
+    "ghtkToken" TEXT,
+    "ghtkShopCreatedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "deletedAt" TIMESTAMP(3),
+    "status" "SellerStatus" NOT NULL DEFAULT 'PENDING',
+
+    CONSTRAINT "sellers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -164,38 +205,18 @@ CREATE TABLE "sessions" (
 );
 
 -- CreateTable
-CREATE TABLE "Address" (
+CREATE TABLE "addresses" (
     "id" SERIAL NOT NULL,
     "provinceId" INTEGER NOT NULL,
     "districtId" INTEGER NOT NULL,
     "wardId" INTEGER NOT NULL,
     "userId" INTEGER,
     "sellerId" INTEGER,
-    "create_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "update_at" TIMESTAMP(3),
-    "delete_at" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
-    CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "sellers" (
-    "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "storeName" VARCHAR(100) NOT NULL,
-    "pickupAddress" VARCHAR(255) NOT NULL,
-    "email" VARCHAR(100) NOT NULL,
-    "shippingSettings" JSONB,
-    "taxInformation" JSONB,
-    "identificationCode" VARCHAR(50),
-    "approvedAt" TIMESTAMP(3),
-    "ghtkShopId" TEXT,
-    "ghtkToken" TEXT,
-    "ghtkShopCreatedAt" TIMESTAMP(3),
-    "status" "SellerStatus" NOT NULL DEFAULT 'PENDING',
-    "userType" "UserType" NOT NULL DEFAULT 'CUSTOMER',
-
-    CONSTRAINT "sellers_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "addresses_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -282,14 +303,32 @@ CREATE TABLE "carts" (
 CREATE TABLE "orders" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
+    "sellerId" INTEGER NOT NULL,
     "orderDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "totalAmount" DECIMAL(10,2) NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'Pending',
+    "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
+    "sellerNote" TEXT,
+    "confirmedAt" TIMESTAMP(3),
+    "shippingCode" TEXT,
+    "shippingMethod" TEXT,
+    "shippingFee" DECIMAL(10,2),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "orders_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "order_status_history" (
+    "id" SERIAL NOT NULL,
+    "orderId" INTEGER NOT NULL,
+    "status" "OrderStatus" NOT NULL,
+    "note" TEXT,
+    "createdBy" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "order_status_history_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -324,6 +363,16 @@ CREATE TABLE "pre_orders" (
 );
 
 -- CreateTable
+CREATE TABLE "order_cancellations" (
+    "id" SERIAL NOT NULL,
+    "orderId" INTEGER NOT NULL,
+    "reason" TEXT NOT NULL,
+    "cancelledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "order_cancellations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "notifications" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -334,16 +383,6 @@ CREATE TABLE "notifications" (
     "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "order_cancellations" (
-    "id" SERIAL NOT NULL,
-    "orderId" INTEGER NOT NULL,
-    "reason" TEXT NOT NULL,
-    "cancelledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "order_cancellations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -363,6 +402,9 @@ CREATE UNIQUE INDEX "sellers_email_key" ON "sellers"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sellers_ghtkShopId_key" ON "sellers"("ghtkShopId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "addresses_userId_sellerId_key" ON "addresses"("userId", "sellerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Province_Code_key" ON "Province"("Code");
@@ -413,25 +455,25 @@ ALTER TABLE "product_classifications" ADD CONSTRAINT "product_classifications_op
 ALTER TABLE "product_classifications" ADD CONSTRAINT "product_classifications_option2Id_fkey" FOREIGN KEY ("option2Id") REFERENCES "classification_options"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "sellers" ADD CONSTRAINT "sellers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_provinceId_fkey" FOREIGN KEY ("provinceId") REFERENCES "Province"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_provinceId_fkey" FOREIGN KEY ("provinceId") REFERENCES "Province"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "District"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "District"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_wardId_fkey" FOREIGN KEY ("wardId") REFERENCES "Ward"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_wardId_fkey" FOREIGN KEY ("wardId") REFERENCES "Ward"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Address" ADD CONSTRAINT "Address_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "sellers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "sellers" ADD CONSTRAINT "sellers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "addresses" ADD CONSTRAINT "addresses_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "sellers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "District" ADD CONSTRAINT "District_ProvinceCode_fkey" FOREIGN KEY ("ProvinceCode") REFERENCES "Province"("Code") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -452,6 +494,15 @@ ALTER TABLE "carts" ADD CONSTRAINT "carts_classificationId_fkey" FOREIGN KEY ("c
 ALTER TABLE "orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "orders" ADD CONSTRAINT "orders_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_status_history" ADD CONSTRAINT "order_status_history_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_status_history" ADD CONSTRAINT "order_status_history_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -470,7 +521,7 @@ ALTER TABLE "pre_orders" ADD CONSTRAINT "pre_orders_productId_fkey" FOREIGN KEY 
 ALTER TABLE "pre_orders" ADD CONSTRAINT "pre_orders_classificationId_fkey" FOREIGN KEY ("classificationId") REFERENCES "product_classifications"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "order_cancellations" ADD CONSTRAINT "order_cancellations_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "order_cancellations" ADD CONSTRAINT "order_cancellations_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

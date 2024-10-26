@@ -7,12 +7,13 @@ import { Link } from 'react-router-dom';
 import {
     IconBoxMultiple1,
     IconBoxMultiple2,
-    IconBoxMultiple3,
-    IconBoxMultiple4,
-    IconBoxMultiple5,
-    IconBoxMultiple6,
-    IconBoxMultiple7,
+    IconDashboard ,
+    IconMapPins ,
+    IconTruckDelivery ,
+    IconReceipt2 ,
+    IconReceiptOff ,
     IconBox,
+    IconTrolley 
 } from '@tabler/icons-react';
 import theme from './SellerNavbar.theme'; 
 import classes from './SellerNabar.module.css'
@@ -31,13 +32,37 @@ interface NavbarChildLink {
 
 const navbarLinks: NavbarLink[] = [
     {
+        link: '/seller/dashboard',
+        label: 'Thống kê',
+        icon: <IconDashboard />,
+        
+    },
+    {
+        link: '/seller/address',
+        label: 'Vận đơn',
+        icon: <IconMapPins />,
+        childLink: [
+            { link: 'shipping', label: 'Kết nối vận chuyển', icon:  <IconTruckDelivery stroke={1.5} />},            
+            { link: 'config', label: 'Cấu hình Vận chuyển', icon:  <IconTrolley stroke={1.5} />},            
+        ],
+        
+    },
+    {
         link: '/seller/product',
-        label: 'Quản lí sản phẩm',
+        label: 'Sản phẩm',
         icon: <IconBox />,
         childLink: [
-            { link: 'product', label: 'Tất cả sản phẩm', icon:  <IconBoxMultiple1 stroke={1.5} />},
-            { link: 'product/create', label: 'Thêm sản phẩm', icon:  <IconBoxMultiple2 />},
+            { link: '', label: 'Tất cả sản phẩm', icon:  <IconBoxMultiple1 stroke={1.5} />},
+            { link: 'create', label: 'Thêm sản phẩm', icon:  <IconBoxMultiple2 />},
             
+        ],
+    },
+    {
+        link: '/seller/order',
+        label: 'Đơn hàng',
+        icon: <IconReceipt2 />,
+        childLink: [
+            { link: 'cancel', label: 'Lý do Huỷ đơn', icon:  <IconReceiptOff stroke={1.5} />},            
         ],
     },
     
@@ -51,14 +76,19 @@ export default function SellertNavbar() {
     const handleClick = (index: number, event: React.MouseEvent<HTMLAnchorElement>) => {
         if (navbarLinks[index].childLink) {
             event.preventDefault();
+            setOpenedIndex(openedIndex === index ? null : index);
+        } else {
+            setOpenedIndex(null);
         }
-        setOpenedIndex(openedIndex === index ? null : index);
         setActive(index);
         setActiveChild(null);
     };
 
-    const handleChildClick = (childIndex: number) => {
+    const handleChildClick = (parentIndex: number, childIndex: number, event: React.MouseEvent<HTMLAnchorElement>) => {
+        event.stopPropagation();
+        setActive(parentIndex);
         setActiveChild(childIndex);
+        setOpenedIndex(parentIndex);
     };
 
     return (
@@ -78,31 +108,34 @@ export default function SellertNavbar() {
                                 variant="light"
                                 style={{
                                     borderRadius: opened ? '0.2rem 0.2rem 0 0' : '0.2rem',
-                                    backgroundColor: index === active ? theme.colors.myColor[3] : (opened ? theme.colors.myColor[3] : ''),
-                                    color: index === active ? theme.colors.myColor[9] : theme.colors.myColor[9],
+                                    backgroundColor: index === active ? '#e6f7ff' : (opened ? '#e6f7ff' : ''),
+                                    color: index === active ? '#1890ff' : '#595959',
                                 }}
                                 classNames={classes}
                             />
-                            {opened && item.childLink && item.childLink.map((childItem, childIndex) => (
-                                <NavLink
-                                    key={`${item.link}-${childIndex}`}
-                                    leftSection={childItem.icon}
-                                    component={Link}
-                                    to={childItem.link}
-                                    label={childItem.label}
-                                    active={childIndex === activeChild}
-                                    onClick={() => handleChildClick(childIndex)}
-                                    variant="light"
-                                    style={{
-                                        borderRadius: childIndex === item.childLink.length - 1 ? '0 0 0.2rem 0.2rem' : '0',
-                                        textDecoration: 'none',
-                                        backgroundColor: childIndex === activeChild ? theme.colors.myColor[2] : theme.colors.myColor[1], 
-                                        color: theme.colors.myColor[0] ? theme.colors.myColor[9] : theme.colors.myColor[9],
-                                        
-                                    }}
-                                    classNames={classes}
-                                />
-                            ))}
+                            {item.childLink && (
+                                <div style={{ display: opened ? 'block' : 'none' }}>
+                                    {item.childLink.map((childItem, childIndex) => (
+                                        <NavLink
+                                            key={`${item.link}-${childIndex}`}
+                                            component={Link}
+                                            to={`${item.link}/${childItem.link}`}
+                                            leftSection={childItem.icon}
+                                            label={childItem.label}
+                                            active={index === active && childIndex === activeChild}
+                                            onClick={(event) => handleChildClick(index, childIndex, event)}
+                                            variant="light"
+                                            style={{
+                                                borderRadius: childIndex === item.childLink.length - 1 ? '0 0 0.2rem 0.2rem' : '0',
+                                                textDecoration: 'none',
+                                                backgroundColor: index === active && childIndex === activeChild ? '#e6f7ff' : '#f0f5ff', 
+                                                color: index === active && childIndex === activeChild ? '#1890ff' : '#595959',
+                                            }}
+                                            classNames={classes}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     );
                 })

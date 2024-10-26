@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 const createProductService = async (
     productData: Product,
-    attributeValues: Array<{ categoryAttributeValueId: number, value: { name: string } }>,
+    attributeValues: AttributeValue[],
     classificationGroups: ClassificationGroup[],
     productClassifications: ProductClassification[],
     files: Express.Multer.File[]
@@ -33,10 +33,10 @@ const createProductService = async (
                 slug: 'something', 
             }
             const createdProductInDB = await prismaTransaction.product.create({data: newProductDetails})
-            console.log(createdProductInDB)
             
-            if (typeof attributeValues === 'object') {
-                await Promise.all(Object.values(attributeValues).map(async (element, index) => {
+            if (Array.isArray(attributeValues)) {
+                console.log(attributeValues)
+                await Promise.all(attributeValues.map(async (element) => {
                     let attributeValue = await prismaTransaction.attributeValue.findFirst({
                         where: {
                             categoryAttributeValueId: element.categoryAttributeValueId,
@@ -47,7 +47,8 @@ const createProductService = async (
                         attributeValue = await prismaTransaction.attributeValue.create({
                             data: {
                                 categoryAttributeValueId: element.categoryAttributeValueId,
-                                value: element.value,
+                                value: element.value
+                            
                             }
                         });
                     } else {
@@ -61,7 +62,7 @@ const createProductService = async (
                                 attributeValueId: attributeValue.id,
                             }
                         },
-                        update: {},
+                        update: {}, // Không cần cập nhật gì nếu đã tồn tại
                         create: {
                             productId: createdProductInDB.id,
                             attributeValueId: attributeValue.id,

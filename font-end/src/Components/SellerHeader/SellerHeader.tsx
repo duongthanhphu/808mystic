@@ -29,31 +29,12 @@ function SellerHeader(){
                 > 
                         <Flex justify='space-between' className='mx-40' >
                             <Group>
-                                    <Link to="/homepage" className='no-underline'>
+                                    <Link to="/seller" className='no-underline'>
                                         <SellerLogo />
                                     </Link>
                             </Group>
                             
-                            <Group justify='flex-end'>
-                                    {isAuthenticated ? (
-                                <>
-                                    <p>Đăng nhập thành công</p>
-                                    
-                                    {/* <Tooltip label="Tài khoản" position="bottom">
-                                        <UnstyledButton>
-                                            <Group px="sm" py="xs" className={classes.iconGroup}>
-                                            </Group>
-                                        </UnstyledButton>
-                                    </Tooltip> */}
-                                </>
-                            ) : (
-                                <>
-                                    <Link to="/seller-login">Đăng nhập</Link>
-                                    <Link to="/seller-register">Đăng ký</Link>
-                                </>
-                            )}
-                                    
-                            </Group>
+                            
                         </Flex >  
                 </Stack>
                 

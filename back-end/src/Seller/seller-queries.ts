@@ -11,7 +11,8 @@ export const countProductsBySeller = async (sellerId: number) => {
 export const getProductsBySeller = async (sellerId: number) => {
     const products = await prisma.product.findMany({    
         where: { sellerId },
-        include: { images: true } // Bao gồm hình ảnh nếu cần
+        include: { images: true } 
     });
     return products;
 };
+        

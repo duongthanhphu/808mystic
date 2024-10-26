@@ -7,7 +7,14 @@ import { ProductImageCarousel } from '../Components/Carousel/ImageCarousel';
 import { getUserId } from '../Utils/authentication'; 
 import { CustomBreadcrumb } from '../Components/CustomBreadcrumb/CustomBreadcrumb'
 import ClientHeader from '../Components/ClientHeader/ClientHeader';
-import { IconUser } from '@tabler/icons-react';
+import ClientFooter from '../Components/ClientFooter/ClientFooter'
+import { Avatar, Table, Badge, Divider, Grid, Col } from "@mantine/core";
+import {
+  IconMessageCircle,
+    IconShoppingCart,
+   IconStore,
+  IconClock,
+} from "@tabler/icons-react";
 import axios from 'axios';
 
 export default function ProductDetail() {
@@ -30,7 +37,19 @@ export default function ProductDetail() {
         
     ];
     
-
+  const productDetails = [
+    { label: "Danh Mục", value: "Thiết Bị Điện Tử > Phụ Kiện Console" },
+    { label: "Số lượng hàng khuyến mãi", value: "80" },
+    { label: "Số sản phẩm còn lại", value: "1564" },
+    { label: "Thương hiệu", value: "Sony" },
+    { label: "Hạn bảo hành", value: "12 tháng" },
+    { label: "Loại bảo hành", value: "Bảo hành nhà sản xuất" },
+    { label: "Loại kết nối", value: "Bluetooth, TYPE-C" },
+    { label: "Loại Phụ Kiện", value: "Gamepad" },
+    { label: "Nền tảng tương thích", value: "PC & Laptop" },
+    { label: "Tổ chức chịu trách nhiệm sản xuất", value: "Đang cập nhật" },
+    { label: "Gửi từ", value: "Hà Nội" },
+  ];
     const fetchProduct = async () => {
         try {
             const productResp = await axios(`http://localhost:4000/api/v1/products/${id}`);
@@ -398,7 +417,7 @@ export default function ProductDetail() {
                         </div>
                     </div>
                 </Paper>
-                <Paper shadow='sm' p={15} mt={20}>
+                {/* <Paper shadow='sm' p={15} mt={20}>
                                 <Text className='font-semibold'>Thông tin cửa hàng</Text>
                                 <Text>Tên cửa hàng: {product.seller?.seller?.storeName || 'Chưa có thông tin'}</Text>
                                 <Text>Ngày tham gia: {product.seller?.seller?.createdAt ? new Date(product.seller.createdAt).toLocaleDateString() : 'Chưa có thông tin'}</Text>
@@ -408,18 +427,118 @@ export default function ProductDetail() {
                                 >
                                     Xem chi tiết shop
                                 </Button>
-                </Paper>
-                <div className='mt-10'>
-                    <div className='flex gap-2 items-center'>
-                        <IconUser strokeWidth={2.5} />
-                        <p className='text-2xl font-semibold'>Mô tả sản phẩm</p>
+                </Paper> */}
+               <div className="p-5">
+            {/* Thông tin cửa hàng */}
+            <Paper
+              shadow="sm"
+              p={20}
+              mt={20}
+              withBorder
+              className="border border-gray-300"
+            >
+              <Group position="apart" align="start">
+                {/* Thông tin cửa hàng bên trái */}
+                <div className="flex flex-col flex-1">
+                  <Group>
+                    <Avatar src="/default-avatar.png" size="lg" className="" />
+                    <div>
+                      <Text className="font-semibold text-lg">
+                        {product.seller?.seller?.storeName || 'Chưa có thông tin'}
+                      </Text>
+                      <div className="flex items-center mt-1">
+                        <Text size="xs" color="dimmed">
+                          {product.seller?.seller?.createdAt ? new Date(product.seller.createdAt).toLocaleDateString() : 'Chưa có thông tin'}
+                        </Text>
+                      </div>
+                      <div className="pt-3 space-x-4">
+                        <Button
+                          variant="outline"
+                          color="blue"
+                          leftIcon={<IconMessageCircle size={16} />}
+                          className="text-sm px-3 py-2"
+                        >
+                          Chat Ngay
+                        </Button>
+                        <Button
+                          variant="filled"
+                          color="blue"
+                          leftIcon={<IconClock size={16} />}
+                          onClick={() => navigate(`/shop/${product.seller?.id}`)}
+                          className="text-sm px-3 py-2"
+                        >
+                          Xem Shop
+                        </Button>
+                      </div>
                     </div>
-                    <div className='mt-5'>
-                        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Asperiores expedita vel.
-                    </div>
+                  </Group>
                 </div>
+                    <Divider orientation="vertical" />
+
+                {/* Thông tin khác của cửa hàng bên phải */}
+                <div className="flex-auto text-right">
+                  <Grid gutter="lg">
+                    <Grid.Col span={3}>
+                      <Text size="m" color="dimmed">
+                        Sản phẩm
+                      </Text>
+                      <Text className="font-semibold text-sm">19</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3}>
+                      <Text size="sm" color="dimmed">
+                        Đánh giá
+                      </Text>
+                      <Text className="font-semibold text-sm">1k</Text>
+                    </Grid.Col>
+                    <Grid.Col span={3}>
+                      <Text size="sm" color="dimmed">
+                        Thời gian phản hồi
+                      </Text>
+                      <Text className="font-semibold text-sm">
+                        trong vài giờ
+                      </Text>
+                    </Grid.Col>
+                    <Grid.Col span={3}>
+                      <Text size="sm" color="dimmed">
+                        Người theo dõi
+                      </Text>
+                      <Text className="font-semibold text-sm">174</Text>
+                    </Grid.Col>
+                  </Grid>
+                </div>
+              </Group>
+            </Paper>
+
+            {/* Mô tả sản phẩm */}
+            <div className="mt-10">
+              <div className="flex gap-2 items-center">
+                <IconShoppingCart strokeWidth={2.5} />
+                <p className="text-2xl font-semibold">Mô tả sản phẩm</p>
+              </div>
+              <div className="mt-5">
+                <Paper shadow="sm" p={15} withBorder>
+                  <Text size="md" className="font-semibold">
+                    Chi Tiết Sản Phẩm
+                  </Text>
+                  <Table className="mt-4 table-auto w-full">
+                    <tbody>
+                      {productDetails.map((detail, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="py-2 px-4 text-gray-600 font-semibold">
+                            {detail.label}
+                          </td>
+                          <td className="py-2 px-4">{detail.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </Paper>
+              </div>
+            </div>
+          </div>
 
             </Container>
+            <ClientFooter/>
         </>
     );
 }

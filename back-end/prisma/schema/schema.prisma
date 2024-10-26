@@ -72,16 +72,21 @@ model ProductAttributeValue {
   @@map("product_attribute_values")
 }
 
-
 model Product {
   id                      Int       @id @default(autoincrement())
   name                    String    @db.VarChar(200)
   categoryId              Int
   sellerId                Int
   shortDescription        String?   @db.VarChar(200)
-  longDescription         String?   @db.VarChar(200)
+  longDescription         String?   @db.Text()
   hasClassification       Boolean   @default(false)
   slug                    String?   @db.VarChar(100)
+  weight                  Float     @default(5) 
+  length                  Float     @default(10) 
+  width                   Float     @default(10) 
+  height                  Float     @default(10) 
+  weightUnit              MeasurementUnit @default(GRAM)
+  sizeUnit                MeasurementUnit @default(CENTIMETER)
   status                  String    @default("available")
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
@@ -97,6 +102,12 @@ model Product {
   @@map("products")
 }
 
+enum MeasurementUnit {
+  GRAM       
+  KILOGRAM   
+  CENTIMETER 
+  METER      
+}
 
 model ClassificationGroup {
   id                      Int       @id @default(autoincrement())
@@ -159,12 +170,13 @@ model User {
   fullName                String?    @db.VarChar(100)
   phone                   String? 
   emailVerified           Boolean    @default(false) 
+  emailVerificationStatus EmailVerificationStatus @default(PENDING)
   otp                     String?    @db.VarChar(4)   
   otpExpires              DateTime?     
   userType                UserType   @default(CUSTOMER)
   status                  UserStatus @default(AVAILABLE)
   createdAt               DateTime   @default(now())
-  updatedAt               DateTime?   @updatedAt
+  updatedAt               DateTime?  @updatedAt
   deletedAt               DateTime?
   products                Product[]
   cart                    Cart[]
@@ -178,6 +190,8 @@ model User {
   districtCode            String?
   wardCode                String?
   address                 String?
+  sellerOrders Order[] @relation("SellerOrders")
+  orderStatusHistories    OrderStatusHistory[]
   @@map("users")
 }
 
@@ -190,16 +204,16 @@ model Seller {
   shippingSettings        Json?
   taxInformation          Json?
   identificationCode      String?    @db.VarChar(50)
+  businessLicense         String?
   approvedAt              DateTime?
   ghtkShopId              String?    @unique
   ghtkToken               String?
   ghtkShopCreatedAt       DateTime?
   createdAt               DateTime   @default(now())
-  updatedAt               DateTime?   @updatedAt
+  updatedAt               DateTime?  @updatedAt
   deletedAt               DateTime?
   addresses               Address[]
   status                  SellerStatus @default(PENDING)
-  userType                UserType   @default(CUSTOMER)
   user                    User       @relation(fields: [userId], references: [id])
   @@map("sellers")
 }
@@ -215,22 +229,24 @@ model Session {
 }
 
 model Address {
-  id                     Int       @id @default(autoincrement())
-  provinceId             Int
-  districtId             Int
-  wardId                 Int
-  userId                 Int?
-  sellerId               Int?
-  create_at              DateTime  @default(now())
-  update_at              DateTime?
-  delete_at              DateTime?
-  province               Province  @relation(fields: [provinceId], references: [id])
-  district               District  @relation(fields: [districtId], references: [id])
-  ward                   Ward      @relation(fields: [wardId], references: [id])
-  user                   User?     @relation(fields: [userId], references: [id])
-  seller                 Seller?   @relation(fields: [sellerId], references: [id])
+  id                      Int       @id @default(autoincrement())
+  provinceId              Int
+  districtId              Int
+  wardId                  Int
+  userId                  Int?
+  sellerId                Int?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+  province                Province  @relation(fields: [provinceId], references: [id])
+  district                District  @relation(fields: [districtId], references: [id])
+  ward                    Ward      @relation(fields: [wardId], references: [id])
+  user                    User?     @relation(fields: [userId], references: [id])
+  seller                  Seller?   @relation(fields: [sellerId], references: [id])
+  orders Order[] @relation("ShippingAddress")
+  @@unique([userId, sellerId])
+  @@map("addresses")
 }
-
 
 model Province {
   id                     Int        @id @default(autoincrement())
@@ -297,6 +313,12 @@ enum SellerStatus {
   SUSPENDED
 }
 
+enum EmailVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
 model Image {
   id                      Int      @id @default(autoincrement())
   productId               Int
@@ -328,21 +350,53 @@ model Cart {
   @@map("carts")
 }
 
+enum OrderStatus {
+  PENDING             // Mới đặt hàng
+  SELLER_CONFIRMED   // Seller đã xác nhận
+  SELLER_REJECTED   // Seller từ chối
+  SHIPPING         // Đang giao hàng
+  DELIVERED        // Đã giao hàng
+  CANCELLED        // Đã hủy
+  COMPLETED        // Hoàn thành
+}
 
 model Order {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  orderDate   DateTime  @default(now())
-  totalAmount Decimal   @db.Decimal(10, 2)
-  status      String    @default("Pending")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  user        User      @relation(fields: [userId], references: [id])
-  items       OrderItem[]
-  cancellation OrderCancellation?
-
+  id                Int               @id @default(autoincrement())
+  userId            Int
+  sellerId          Int   
+  shippingAddressId Int?
+  totalAmount       Decimal           @db.Decimal(10, 2)
+  sellerNote        String?          // Ghi chú của seller
+  shippingCode      String?          // Mã vận đơn
+  shippingMethod    String?          // Phương thức vận chuyển
+  shippingFee       Decimal?         @db.Decimal(10, 2)
+  createdBy         Int?              // ID của user/ seller tạo ra đơn hàng
+  confirmedAt       DateTime?        // Thời gian seller xác nhận
+  orderDate         DateTime          @default(now())
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+  user              User              @relation(fields: [userId], references: [id])
+  seller            User              @relation("SellerOrders", fields: [sellerId], references: [id])
+  status            OrderStatus       @default(PENDING)  // Đổi kiểu status
+  items             OrderItem[]
+  cancellation      OrderCancellation?
+  statusHistory     OrderStatusHistory[] // Thêm lịch sử trạng thái
+  shippingAddress   Address? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   @@map("orders")
+}
+
+model OrderStatusHistory {
+  id              Int         @id @default(autoincrement())
+  orderId         Int
+  status          OrderStatus
+  note            String?
+  createdBy       Int         // ID của user tạo ra trạng thái (có thể là seller hoặc customer)
+  createdAt       DateTime    @default(now())
+  order           Order       @relation(fields: [orderId], references: [id])
+  user        User        @relation(fields: [createdBy], references: [id])
+
+  @@map("order_status_history")
 }
 
 model OrderItem {
@@ -380,6 +434,16 @@ model PreOrder {
   @@map("pre_orders")
 }
 
+model OrderCancellation {
+  id           Int      @id @default(autoincrement())
+  orderId      Int      @unique
+  reason       String
+  cancelledAt  DateTime @default(now())
+  order        Order    @relation(fields: [orderId], references: [id])
+  
+  @@map("order_cancellations")
+}
+
 model Notification {
   id        Int       @id @default(autoincrement())
   userId    Int
@@ -392,16 +456,4 @@ model Notification {
 
   @@map("notifications")
 }
-
-model OrderCancellation {
-  id           Int      @id @default(autoincrement())
-  orderId      Int      @unique
-  reason       String
-  cancelledAt  DateTime @default(now())
-  order        Order    @relation(fields: [orderId], references: [id])
-  
-  @@map("order_cancellations")
-}
-
-
 

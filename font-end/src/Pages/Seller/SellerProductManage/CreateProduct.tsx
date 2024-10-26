@@ -238,14 +238,18 @@ export default function CreateProduct() {
             formData.append('slug', values.productSlug);
             formData.append('status', 'ACTIVE');
             formData.append('hasClassification', classificationData ? 'true' : 'false');
-            const attributeValues = attributes.map((attr, index) => {
-                const [attrId, valueId] = values[attr.slug].split('_').map(Number);
+            const attributeValues = attributes.map((attr) => {
+            const selectedValue = values[attr.slug];
+            if (selectedValue) {
+                const [attrId, valueId] = selectedValue.split('_').map(Number);
                 return {
-                    id: index + 1, // Hoặc bạn có thể sử dụng một logic khác để tạo id
+                    categoryAttributeId: attrId,
                     categoryAttributeValueId: valueId,
                     value: { originName: { id: valueId } }
                 };
-            });
+            }
+                return null;
+            }).filter(Boolean);
             formData.append('attributeValues', JSON.stringify(attributeValues));
 
             if (classificationData) {

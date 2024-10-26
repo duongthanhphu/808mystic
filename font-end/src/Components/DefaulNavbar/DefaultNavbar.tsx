@@ -82,7 +82,7 @@ export default function DefaultNavbar() {
                                 variant="light"
                                 style={{
                                     borderRadius: opened ? '0.2rem 0.2rem 0 0' : '0.2rem',
-                                    backgroundColor: index === active ? theme.colors.myColor[3] : (opened ? theme.colors.myColor[3] : ''),
+                                    backgroundColor: index === active ? theme.colors.myColor[5] : (opened ? theme.colors.myColor[3] : ''),
                                     color: index === active ? theme.colors.myColor[9] : theme.colors.myColor[9],
                                 }}
                                 classNames={classes}
@@ -94,14 +94,14 @@ export default function DefaultNavbar() {
                                     component={Link}
                                     to={childItem.link}
                                     label={childItem.label}
-                                    active={childIndex === activeChild}
+                                    // active={childIndex === activeChild}
                                     onClick={() => handleChildClick(childIndex)}
                                     variant="light"
                                     style={{
                                         borderRadius: childIndex === item.childLink.length - 1 ? '0 0 0.2rem 0.2rem' : '0',
                                         textDecoration: 'none',
-                                        backgroundColor: childIndex === activeChild ? theme.colors.myColor[2] : theme.colors.myColor[1], 
-                                        color: theme.colors.myColor[0] ? theme.colors.myColor[9] : theme.colors.myColor[9],
+                                        // backgroundColor: childIndex === activeChild ? theme.colors.myColor[1] : '', 
+                                        // color: theme.colors.myColor[0] ? theme.colors.myColor[9] : '',
                                         
                                     }}
                                     classNames={classes}
