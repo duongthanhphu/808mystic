@@ -25,7 +25,7 @@ function SellerRegister(){
     const handleSubmit = async (values) => {
         setLoading(true); 
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/seller/login', {
+            const response = await axios.post('http://localhost:4000/api/v1/sellers/login', {
                 username: values.username,
                 password: values.password,
             },{ withCredentials: true });

@@ -1,112 +1,119 @@
+import { NavLink } from "@mantine/core";
+import { Link } from "react-router-dom";
 import {
-    NavLink,
-    MantineProvider,
-} from '@mantine/core';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import {
-    IconBoxMultiple1,
-    IconBoxMultiple2,
-    IconBoxMultiple3,
-    IconBoxMultiple4,
-    IconBoxMultiple5,
-    IconBoxMultiple6,
-    IconBoxMultiple7,
-    IconBox,
-} from '@tabler/icons-react';
-import theme from './SellerNavbar.theme'; 
-import classes from './SellerNabar.module.css'
-interface NavbarLink {
-    link: string;
-    label: string;
-    icon: React.ReactNode;
-    childLink?: NavbarChildLink[];
-}
+  IconHome2,
+  IconMapPin,
+  IconUser,
+  IconUsers,
+  IconUserCircle,
+  IconBox,
+  IconBuildingWarehouse,
+  IconClipboardList,
+  IconFileDescription,
+  IconStars,
+  IconCoin,
+  IconMessage,
+} from "@tabler/icons-react";
+import { useState } from "react";
 
-interface NavbarChildLink {
-    link: string;
-    label: string;
-    icon?: React.ReactNode;
+interface NavbarLink {
+  link: string;
+  label: string;
+  icon: React.ReactNode;
 }
 
 const navbarLinks: NavbarLink[] = [
-    {
-        link: '/seller/product',
-        label: 'Quản lí sản phẩm',
-        icon: <IconBox />,
-        childLink: [
-            { link: 'product', label: 'Tất cả sản phẩm', icon:  <IconBoxMultiple1 stroke={1.5} />},
-            { link: 'product/create', label: 'Thêm sản phẩm', icon:  <IconBoxMultiple2 />},
-            
-        ],
-    },
-    
+  {
+    link: "/seller/",
+    label: "Trang chủ",
+    icon: <IconHome2 size={20} />,
+  },
+  {
+    link: "/seller/product",
+    label: "Sản phẩm",
+    icon: <IconBox size={20} />,
+  },
+  {
+    link: "/seller/address",
+    label: "Địa chỉ",
+    icon: <IconMapPin size={20} />,
+  },
+  {
+    link: "/seller/users",
+    label: "Người dùng",
+    icon: <IconUser size={20} />,
+  },
+  {
+    link: "/seller/staff",
+    label: "Nhân viên",
+    icon: <IconUserCircle size={20} />,
+  },
+  {
+    link: "/seller/customers",
+    label: "Khách hàng",
+    icon: <IconUsers size={20} />,
+  },
+
+  {
+    link: "/seller/inventory",
+    label: "Tồn kho",
+    icon: <IconBuildingWarehouse size={20} />,
+  },
+  {
+    link: "/seller/orders",
+    label: "Đơn hàng",
+    icon: <IconClipboardList size={20} />,
+  },
+  {
+    link: "/seller/documents",
+    label: "Vận đơn",
+    icon: <IconFileDescription size={20} />,
+  },
+  {
+    link: "/seller/reviews",
+    label: "Đánh giá",
+    icon: <IconMessage size={20} />,
+  },
+  {
+    link: "/seller/points",
+    label: "Điểm thưởng",
+    icon: <IconStars size={20} />,
+  },
+  {
+    link: "/seller/balance",
+    label: "Số quỹ",
+    icon: <IconCoin size={20} />,
+  },
 ];
 
-export default function SellertNavbar() {
-    const [active, setActive] = useState<number | null>(null);
-    const [activeChild, setActiveChild] = useState<number | null>(null);
-    const [openedIndex, setOpenedIndex] = useState<number | null>(null);
+export default function SellerNavbar() {
+  const [active, setActive] = useState<string | null>(null);
 
-    const handleClick = (index: number, event: React.MouseEvent<HTMLAnchorElement>) => {
-        if (navbarLinks[index].childLink) {
-            event.preventDefault();
-        }
-        setOpenedIndex(openedIndex === index ? null : index);
-        setActive(index);
-        setActiveChild(null);
-    };
+  const items = navbarLinks.map((item) => (
+    <NavLink
+      key={item.label}
+      component={Link}
+      to={item.link}
+      active={item.link === active}
+      label={item.label}
+      leftSection={item.icon}
+      onClick={() => setActive(item.link)}
+      variant="light"
+          className={`
+        font-bold
+        text-lg
+        rounded-md mb-1 
+        hover:bg-blue-50 hover:text-blue-600
+        ${item.link === active ? "bg-blue-50 text-blue-500" : "text-gray-700"}
+      `}
+    />
+  ));
 
-    const handleChildClick = (childIndex: number) => {
-        setActiveChild(childIndex);
-    };
+  return (
+    <div className="h-full">
 
-    return (
-        <MantineProvider theme={theme}>
-            {
-                navbarLinks.map((item, index) => {
-                    const opened = openedIndex === index;
-                    return (
-                        <div key={index}>
-                            <NavLink
-                                component={Link}
-                                to={item.link}
-                                label={item.label}
-                                leftSection={item.icon}
-                                active={index === active}
-                                onClick={(event) => handleClick(index, event)}
-                                variant="light"
-                                style={{
-                                    borderRadius: opened ? '0.2rem 0.2rem 0 0' : '0.2rem',
-                                    backgroundColor: index === active ? theme.colors.myColor[3] : (opened ? theme.colors.myColor[3] : ''),
-                                    color: index === active ? theme.colors.myColor[9] : theme.colors.myColor[9],
-                                }}
-                                classNames={classes}
-                            />
-                            {opened && item.childLink && item.childLink.map((childItem, childIndex) => (
-                                <NavLink
-                                    key={`${item.link}-${childIndex}`}
-                                    leftSection={childItem.icon}
-                                    component={Link}
-                                    to={childItem.link}
-                                    label={childItem.label}
-                                    active={childIndex === activeChild}
-                                    onClick={() => handleChildClick(childIndex)}
-                                    variant="light"
-                                    style={{
-                                        borderRadius: childIndex === item.childLink.length - 1 ? '0 0 0.2rem 0.2rem' : '0',
-                                        textDecoration: 'none',
-                                        backgroundColor: childIndex === activeChild ? theme.colors.myColor[2] : theme.colors.myColor[1], 
-                                        color: theme.colors.myColor[0] ? theme.colors.myColor[9] : theme.colors.myColor[9],
-                                        
-                                    }}
-                                    classNames={classes}
-                                />
-                            ))}
-                        </div>
-                    );
-                })
-            }
-        </MantineProvider>
-    );
+      {/* Navigation links */}
+      <div className="px-3">{items}</div>
+    </div>
+  );
 }

@@ -1,116 +1,136 @@
+import { Stack, Text, NavLink, Box, Divider, rem } from "@mantine/core";
+import { Link, useLocation } from "react-router-dom";
 import {
-    NavLink,
-    MantineProvider,
-} from '@mantine/core';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import {
-    IconBoxMultiple1,
-    IconBoxMultiple2,
-    IconBoxMultiple3,
-    IconBoxMultiple4,
-    IconBoxMultiple5,
-    IconBoxMultiple6,
-    IconBoxMultiple7,
-    IconBox,
-} from '@tabler/icons-react';
-import theme from './DefaultNavbar.theme'; // Import theme từ file theme.js
-import classes from './DefaultNavbar.module.css'
-interface NavbarLink {
-    link: string;
-    label: string;
-    icon: React.ReactNode;
-    childLink?: NavbarChildLink[];
-}
+  IconBoxMultiple1,
+  IconBoxMultiple2,
+  IconBoxMultiple3,
+  IconBoxMultiple4,
+  IconBoxMultiple5,
+  IconBoxMultiple6,
+  IconBoxMultiple7,
+  IconBox,
+} from "@tabler/icons-react";
 
 interface NavbarChildLink {
-    link: string;
-    label: string;
-    icon?: React.ReactNode;
+  link: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+interface NavbarLink {
+  link: string;
+  label: string;
+  icon: React.ReactNode;
+  childLink?: NavbarChildLink[];
 }
 
 const navbarLinks: NavbarLink[] = [
-    {
-        link: '/admin/product',
-        label: 'Sản phẩm',
-        icon: <IconBox />,
-        childLink: [
-            { link: '/admin/category', label: 'Danh mục sản phẩm', icon: <IconBoxMultiple1 stroke={1.5} /> },
-            { link: '/admin/brand', label: 'Nhãn hiệu', icon: <IconBoxMultiple2 /> },
-            { link: '/admin/supplier', label: 'Nhà cung cấp', icon: <IconBoxMultiple3 /> },
-            { link: '/admin/tag', label: 'Nhãn dán', icon: <IconBoxMultiple4 /> },
-            { link: '/admin/unit', label: 'Đơn vị tính', icon: <IconBoxMultiple5 /> },
-            { link: '/admin/property', label: 'Thuộc tính sản phẩm', icon: <IconBoxMultiple6 /> },
-            { link: '/admin/specification', label: 'Thông số sản phẩm', icon: <IconBoxMultiple7 /> },
-        ],
-    },
-    
+  {
+    link: "/admin/product",
+    label: "Sản phẩm",
+    icon: <IconBox size={35} />,
+    childLink: [
+      {
+        link: "/admin/category",
+        label: "Danh mục sản phẩm",
+        icon: <IconBoxMultiple1 size={25} />,
+      },
+      {
+        link: "/admin/brand",
+        label: "Nhãn hiệu",
+        icon: <IconBoxMultiple2 size={25} />,
+      },
+      {
+        link: "/admin/supplier",
+        label: "Nhà cung cấp",
+        icon: <IconBoxMultiple3 size={25} />,
+      },
+      {
+        link: "/admin/tag",
+        label: "Nhãn dán",
+        icon: <IconBoxMultiple4 size={25} />,
+      },
+      {
+        link: "/admin/unit",
+        label: "Đơn vị tính",
+        icon: <IconBoxMultiple5 size={25} />,
+      },
+      {
+        link: "/admin/property",
+        label: "Thuộc tính sản phẩm",
+        icon: <IconBoxMultiple6 size={25} />,
+      },
+      {
+        link: "/admin/specification",
+        label: "Thông số sản phẩm",
+        icon: <IconBoxMultiple7 size={25} />,
+      },
+    ],
+  },
+  // Thêm các sections khác nếu cần
 ];
 
 export default function DefaultNavbar() {
-    const [active, setActive] = useState<number | null>(null);
-    const [activeChild, setActiveChild] = useState<number | null>(null);
-    const [openedIndex, setOpenedIndex] = useState<number | null>(null);
+  const location = useLocation();
 
-    const handleClick = (index: number, event: React.MouseEvent<HTMLAnchorElement>) => {
-        if (navbarLinks[index].childLink) {
-            event.preventDefault();
-        }
-        setOpenedIndex(openedIndex === index ? null : index);
-        setActive(index);
-        setActiveChild(null);
-    };
+  return (
+    <Box className="h-full p-4">
+      <Stack spacing="xs">
+        {navbarLinks.map((section) => (
+          <Box key={section.label} className="mb-4">
+            {/* Section Header */}
+            <NavLink
+              component={Link}
+              to={section.link}
+              label={
+                <div className="flex items-center gap-3">
+                  <div className="text-blue-600">{section.icon}</div>
+                  <Text size="sm" fw={600} className="text-gray-700">
+                    {section.label}
+                  </Text>
+                </div>
+              }
+              className={`rounded-md mb-2 hover:bg-blue-150 ${
+                location.pathname === section.link ? "bg-blue-100" : ""
+              }`}
+              active={location.pathname === section.link}
+            />
 
-    const handleChildClick = (childIndex: number) => {
-        setActiveChild(childIndex);
-    };
+            {/* Child Links Container */}
+            <Box className="space-y-1 ml-3">
+              {section.childLink?.map((child) => (
+                <NavLink
+                  key={child.link}
+                  component={Link}
+                  to={child.link}
+                  label={
+                    <div className="flex items-center gap-3">
+                      <div className="text-gray-900">{child.icon}</div>
+                      <Text size="sm" className="text-gray-700 font-bold">
+                        {child.label}
+                      </Text>
+                    </div>
+                  }
+                  className={`rounded-md hover:bg-blue-100 transition-colors ${
+                    location.pathname === child.link
+                      ? "bg-blue-100 text-blue-600"
+                      : ""
+                  }`}
+                  active={location.pathname === child.link}
+                  styles={(theme) => ({
+                    root: {
+                      "&[data-active]": {
+                        backgroundColor: theme.colors.gray[1],
+                      },
+                    },
+                  })}
+                />
+              ))}
+            </Box>
 
-    return (
-        <MantineProvider theme={theme}>
-            {
-                navbarLinks.map((item, index) => {
-                    const opened = openedIndex === index;
-                    return (
-                        <div key={index}>
-                            <NavLink
-                                component={Link}
-                                to={item.link}
-                                label={item.label}
-                                leftSection={item.icon}
-                                active={index === active}
-                                onClick={(event) => handleClick(index, event)}
-                                variant="light"
-                                style={{
-                                    borderRadius: opened ? '0.2rem 0.2rem 0 0' : '0.2rem',
-                                    backgroundColor: index === active ? theme.colors.myColor[3] : (opened ? theme.colors.myColor[3] : ''),
-                                    color: index === active ? theme.colors.myColor[9] : theme.colors.myColor[9],
-                                }}
-                                classNames={classes}
-                            />
-                            {opened && item.childLink && item.childLink.map((childItem, childIndex) => (
-                                <NavLink
-                                    key={`${item.link}-${childIndex}`}
-                                    leftSection={childItem.icon}
-                                    component={Link}
-                                    to={childItem.link}
-                                    label={childItem.label}
-                                    active={childIndex === activeChild}
-                                    onClick={() => handleChildClick(childIndex)}
-                                    variant="light"
-                                    style={{
-                                        borderRadius: childIndex === item.childLink.length - 1 ? '0 0 0.2rem 0.2rem' : '0',
-                                        textDecoration: 'none',
-                                        backgroundColor: childIndex === activeChild ? theme.colors.myColor[2] : theme.colors.myColor[1], 
-                                        color: theme.colors.myColor[0] ? theme.colors.myColor[9] : theme.colors.myColor[9],
-                                        
-                                    }}
-                                    classNames={classes}
-                                />
-                            ))}
-                        </div>
-                    );
-                })
-            }
-        </MantineProvider>
-    );
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
 }

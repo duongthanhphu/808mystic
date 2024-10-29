@@ -1,4 +1,25 @@
-.label {
-    font-size: var(--mantine-font-size-md);
-    font-weight: 500;
+.root {
+    &:hover {
+        background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    }
+}
+
+.link {
+    padding: 8px 12px;
+    border-radius: var(--mantine-radius-sm);
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: var(--mantine-color-myColor-1);
+    }
+}
+
+.linkActive {
+    &, &:hover {
+        background-color: var(--mantine-color-myColor-2);
+    }
+}
+
+.chevron {
+    transition: transform 200ms ease;
 }
