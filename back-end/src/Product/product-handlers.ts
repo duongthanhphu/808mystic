@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import productService from './product-services';
 import { Product } from './product-model'
-
+import prismaService from '../prisma.service';
+import inventoryService from './Inventory/inventory-services';
 
 const createProductHandler = async (req: Request, res: Response) => {
     try {
@@ -43,23 +44,45 @@ const createProductHandler = async (req: Request, res: Response) => {
             productClassifications,
             files
         );
-        if (files && files.length > 0) {
+        
+
+        // Tạo inventory sau khi tạo sản phẩm thành công
+        try {
+            const inventories = await inventoryService.createInventoryForProduct(
+                createdProduct.id,
+                8, // hard code warehouse id [HOT FIX]
+                createdProduct.sellerId
+            );
+
+            if (files && files.length > 0) {
                 try {
                     await productService.uploadProductImages(files, String(createdProduct.id));
                 } catch (uploadError) {
                     console.error('Error uploading images:', uploadError);
                 }
             }
-        return res.status(201).json({
-            message: "Product created successfully",
-            product: createdProduct
-        });
+            
+
+            return res.status(201).json({
+                message: "Product created successfully with inventory",
+                product: createdProduct,
+                inventories: inventories
+            });
+
+        } catch (inventoryError) {
+            console.error("Error creating inventory:", inventoryError);
+            return res.status(201).json({
+                message: "Product created successfully but inventory creation failed",
+                product: createdProduct,
+                inventoryError: inventoryError
+            });
+        }
+        
     } catch (error: unknown) {
         console.error("Error creating product:", error);
         return res.status(500).json({ error: "An error occurred while creating the product" });
     }
 };
-
 
 const findByIdHandler = async (req: Request, res: Response) => {
     const { id } = req.params
@@ -107,7 +130,6 @@ const imageTester = async (req: Request, res: Response) => {
         });
     }
 }
-
 
 export default { 
     createProductHandler,

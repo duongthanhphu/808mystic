@@ -65,7 +65,7 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
                 },
             });
 
-            await prisma.address.upsert({
+            const sellerAddress = await prisma.address.upsert({
                 where: { 
                     userId_sellerId: {
                         userId: user.id,
@@ -86,7 +86,22 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
                 },
             });
 
-            return { user, seller };
+            const defaultWarehouse = await prisma.warehouse.create({
+                data: {
+                    sellerId: seller.id,
+                    name: "Kho mặc định",
+                    code: `WH-${seller.id}-${Date.now()}`,
+                    address: pickUpAddress,
+                    provinceId: Number(sellerAddress.provinceId),
+                    districtId: Number(sellerAddress.districtId),
+                    wardId: Number(sellerAddress.wardId),
+                    status: "ACTIVE",
+                    description: "Kho hàng mặc định được tạo tự động"
+                }
+            });
+
+
+            return { user, seller, defaultWarehouse };
         });
 
         if (!result.user.emailVerified) {
@@ -103,7 +118,8 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
 
             return res.status(201).json({
                 message: "Vui lòng kiểm tra email để xác thực và hoàn tất đăng ký người bán.",
-                userId: result.user.id
+                userId: result.user.id,
+                warehouseId: result.defaultWarehouse.id // Thêm warehouseId vào response
             });
         } else {
             return res.status(200).json({
@@ -200,8 +216,8 @@ const login = async (req: Request, res: Response) => {
             return res.status(500).json({ error: 'Lỗi cấu hình máy chủ' });
         }
 
-        const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '2d' });
-        const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
+        const accessToken = jwt.sign({ userId: user.id, role: user.userType }, accessTokenFromEnv, { expiresIn: '2d' });
+        const refreshToken = jwt.sign({ userId: user.id, role: user.userType }, refreshTokenFromEnv, { expiresIn: '7d' });
         
         await prismaService.session.create({
             data: {
@@ -227,11 +243,17 @@ const login = async (req: Request, res: Response) => {
 
         return res.status(200).json({ 
             message: 'Đăng nhập thành công',
+            success: true,
             user: {
                 id: user.id,
                 email: user.email,
                 userType: user.userType,
-                username: user.username
+                username: user.username,
+                role: user.userType
+            },
+            tokens: {
+                accessToken,
+                refreshToken
             }
         });
     } catch (error) {
@@ -254,7 +276,7 @@ const getSellerDetails = async (req: Request, res: Response) => {
                         district: true,
                         ward: true
                     }
-                }
+                },
             }
         });
 
@@ -374,10 +396,11 @@ const getSellerProducts = async (req: Request, res: Response) => {
     }
 };
 
+
 export default {
     registerOrUpgradeToSeller,
     verifyEmailAndActivateSeller,
     login,
     getSellerDetails,
-    getSellerProducts
+    getSellerProducts,
 }

@@ -8,6 +8,7 @@ export interface Product {
     hasClassification: boolean;
     slug: string;
     status: string;
+    warehouseId: number;
     attributeValues?: AttributeValue[];
     classificationGroups?: ClassificationGroup[];
     productClassifications?: ProductClassification[];
@@ -28,7 +29,7 @@ export interface ClassificationGroup {
 
 export interface ProductClassification {
     id?: number;
-    [key: string]: any;  // Cho phép các trường động như option1, option2, etc.
+    [key: string]: any;  
     price: number;
     stock: number;
 }

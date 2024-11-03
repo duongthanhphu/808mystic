@@ -105,7 +105,6 @@ export default class GHNService {
         });
     }
 
-
     // 2. Tạo đơn hàng
     async createOrder(orderInfo: GHNOrderInfo) {
         try {
@@ -194,9 +193,17 @@ export default class GHNService {
             const response = await this.client.post('/shiip/public-api/v2/a5/gen-token', {
                 order_codes: [order_code]
             });
-        return response.data;
+            
+            // Sử dụng URL production thay vì development
+            const printUrl = `https://online-gateway.ghn.vn/a5/public-api/printA5?token=${response.data.data.token}`;
+            
+            return {
+                success: true,
+                printUrl: printUrl,
+                token: response.data.data.token
+            };
         } catch (error: any) {
-        throw new Error(`Failed to print order: ${error}`);
+            throw new Error(`Failed to print order: ${error}`);
         }
     }
 
@@ -279,7 +286,6 @@ export default class GHNService {
             const response = await this.client.get('/shiip/public-api/master-data/ward', {
                 params: { ward_code: wardCode }
             });
-            console.log(response.data.data)
             return response.data.data[0]; // Giả sử API trả về một mảng và chúng ta lấy phần tử đầu tiên
         } catch (error: any) {
             throw new Error(`Không thể lấy thông tin phường/xã: ${error.message}`);

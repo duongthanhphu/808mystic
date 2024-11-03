@@ -160,9 +160,54 @@ const findAllService = async (page: number = 1, pageSize: number = 10) => {
 }
 
 
+const addProductClassification = async (
+    productId: number,
+    data: {
+        option1Id: number;
+        option2Id?: number;
+        stock: number;
+        price: number;
+    }
+) => {
+    const classification = await prisma.productClassification.create({
+        data: {
+            productId,
+            ...data
+        }
+    });
+
+    // Tự động tạo inventory cho classification mới
+    await prisma.inventory.create({
+        data: {
+            productId,
+            classificationId: classification.id,
+            warehouseId: 1, // Lấy warehouse mặc định
+            quantity: data.stock,
+            minQuantity: 10,
+            maxQuantity: 100
+        }
+    });
+
+    return classification;
+};
+
+const removeProductClassification = async (classificationId: number) => {
+    // Xóa inventory trước
+    await prisma.inventory.deleteMany({
+        where: { classificationId }
+    });
+
+    // Sau đó xóa classification
+    return await prisma.productClassification.delete({
+        where: { id: classificationId }
+    });
+};
+
 export default {
     createProductService,
     uploadProductImages,
     findByIdService,
-    findAllService
+    findAllService,
+    addProductClassification,
+    removeProductClassification
 }

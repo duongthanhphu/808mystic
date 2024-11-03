@@ -11,12 +11,11 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import DefaultShell from './Components/DefaultShell/DefaultShell'
 import AdminDashboard from './Pages/AdminDashboard'
 // Category Import
-import CategoryManage from './Pages/Category/CategoryManage'
+// import CategoryManage from './Pages/Category/CategoryManage'
 import CategoryCreate from './Pages/Category/CategoryCreate'
 import CategoryUpdate from './Pages/Category/CategoryUpdate'
 
-// Product Import
-import ProductManage from './Pages/Product/ProductManage'
+
 // Seller 
 import SellerShell from './Components/SellerShell/SellerShell'
 import SellerRegister from './Pages/Seller/SellerRegister/SellerRegister'
@@ -29,11 +28,14 @@ import SellerAddress from './Pages/Seller/SellerAddress/SellerAddress'
 import SellerShipping from './Pages/Seller/SellerAddress/SellerShipping'
 import SellerAddressConfig from './Pages/Seller/SellerAddress/SellerAddressConfig'
 import SellerCancelOrder from './Pages/Seller/SellerOrder/SellerCancelOrder'
-import SellerOrder from './Pages/Seller/SellerOrder/SellerOrder'
+import SellerOrder from './Pages/Seller/SellerOrder/SellerOrderManage.tsx'
 import SellerBill from './Pages/Seller/SellerBill/SellerBill'
-
-
-
+import SellerInventory from './Pages/Seller/Inventory/InventoryManage'
+import CreateWarehouse from './Pages/Seller/Warehouse/CreateWarehouse'
+import ManageWarehouse from './Pages/Seller/Warehouse/ManageWarehouse'
+import UpdateWarehouse from './Pages/Seller/Warehouse/UpdateWarehouse'
+import SellerOrderDetail from './Pages/Seller/SellerOrder/SellerOrderDetail'
+import SellerOrderManage from './Pages/Seller/SellerOrder/SellerOrderManage'
 // Client
 import ClientSignIn from './Pages/ClientSignIn/ClientSignIn'
 import ClientSignUp from './Pages/ClientSignUp/ClientSignUp'
@@ -44,9 +46,10 @@ import OrderConfirmation from './Pages/ConfirmOrder';
 
 import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart"
 
+import PrivateRoute from './Components/PrivateRoute'
+
 function App() {
     return (
-        
         <MantineProvider >
             <Notifications />
             <ModalsProvider>
@@ -57,10 +60,15 @@ function App() {
                                 <Route path="category" element={<CategoryCreate />} />
                                 <Route path="category/create" element={<CategoryCreate />} />
                                 <Route path="category/update/:id" element={<CategoryUpdate />} />
-                                <Route path="product" element={<ProductManage />} />
+                                
                         </Route>
-                        <Route path="/seller" element={<SellerShell />}>
+                        <Route path="/seller" element={
+                            <PrivateRoute>
+                                <SellerShell />
+                            </PrivateRoute>
+                        }>
                                 <Route index element={<SellerDashboard />} />
+                                <Route path="dashboard" element={<SellerDashboard />} />
                                 <Route path="product/create" element={<CreateProduct />} />
                                 <Route path="product/update/:id" element={<UpdateProduct />} />
                                 <Route path="product" element={<ManageProduct />} />
@@ -71,20 +79,26 @@ function App() {
                                 <Route path="/seller/order" element={<SellerOrder />} />
                                 <Route path="/seller/order/cancel" element={<SellerCancelOrder />} />
                                 <Route path="/seller/bill" element={<SellerBill />} />
+                                <Route path="/seller/inventory/" element={<SellerInventory />} />
+                                <Route path="/seller/warehouse/create" element={<CreateWarehouse />} />
+                                <Route path="/seller/warehouse/manage/" element={<ManageWarehouse />} />
+                                <Route path="/seller/warehouse/detail/:warehouseId" element={<SellerInventory />} />
+                                <Route path="/seller/warehouse/update/:id" element={<UpdateWarehouse />} />
+                                <Route path="/seller/order/detail/:orderId" element={<SellerOrderDetail />} />
+                                <Route path="/seller/order/manage" element={<SellerOrderManage />} />
+
                         </Route>    
-
                         <Route>
-                            <Route index element={<HomePage />} />
-                            <Route path="signin" element={<ClientSignIn />} />
-                            <Route path="signup" element={<ClientSignUp />} />
-                            <Route path="homepage" element={<HomePage />} />
-                            <Route path="product/:id" element={<ProductDetail />} />
-                            <Route path="seller-register" element={<SellerRegister />} />
-                            <Route path="seller-login" element={<SellerLogin />} />
-                            <Route path="/shop/:sellerId" element={<ShopDetail/>} />
-                            <Route path="/order-confirmation" element={<OrderConfirmation/>} />
-                                            <Route path="/shopping-cart" element={<ShoppingCart />} />
-
+                                <Route index element={<HomePage />} />
+                                <Route path="signin" element={<ClientSignIn />} />
+                                <Route path="signup" element={<ClientSignUp />} />
+                                <Route path="homepage" element={<HomePage />} />
+                                <Route path="product/:id" element={<ProductDetail />} />
+                                <Route path="seller-register" element={<SellerRegister />} />
+                                <Route path="seller-login" element={<SellerLogin />} />
+                                <Route path="/shop/:sellerId" element={<ShopDetail/>} />
+                                <Route path="/order-confirmation" element={<OrderConfirmation/>} />
+                                <Route path="/shopping-cart" element={<ShoppingCart />} />
                         </Route>
                     </Routes>
                 </Router>

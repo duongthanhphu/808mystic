@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ContextType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Title, Paper, Stack, Group, Button, TextInput, Textarea, Select, Badge, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -6,7 +6,8 @@ import { notifications } from '@mantine/notifications';
 import axios from 'axios';
 import { IconChevronLeft } from '@tabler/icons-react';
 import DropzoneComponent from "../../../Components/Dropzone";
-import { ProductClassification, ProductClassificationData } from '../../../Pages/Product/ProductClassification';
+import { ProductClassification, ProductClassificationData } from '../../Product/ProductClassification.tsx';
+import { useOutletContext } from 'react-router-dom';
 
 interface Category {
     id: string;
@@ -74,13 +75,14 @@ const CategoryList: React.FC<{
 
 export default function CreateProduct() {
     const navigate = useNavigate();
+    const { userId } = useOutletContext<{ userId: string }>();
+
     const [categories, setCategories] = useState<Category[]>([]);
     const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
     const [categoryPath, setCategoryPath] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<SelectedCategoryInfo | null>(null);
     const [attributes, setAttributes] = useState<Attribute[]>([]);
     const [classificationData, setClassificationData] = useState<ProductClassificationData | null>(null);
-
     const form = useForm({
         initialValues: {
             productName: '',
@@ -232,7 +234,7 @@ export default function CreateProduct() {
 
             formData.append('name', values.productName);
             formData.append('categoryId', selectedCategory?.id || '');
-            formData.append('sellerId', 1); // Giả sử sellerId là 1
+            formData.append('sellerId', userId); 
             formData.append('shortDescription', values.shortDescription);
             formData.append('longDescription', values.fullDescription);
             formData.append('slug', values.productSlug);

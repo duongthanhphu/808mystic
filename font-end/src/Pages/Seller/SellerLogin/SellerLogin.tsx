@@ -15,40 +15,50 @@ import {
 import { Notifications } from '@mantine/notifications';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from '@mantine/form';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-function SellerRegister(){
-    const [loading, setLoading] = useState(false); 
-    const [countdown, setCountdown] = useState(null);
+import { checkAuthStatus } from '../../../utils/authentication';
+
+function SellerLogin(){
+    const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+
     const handleSubmit = async (values) => {
-        setLoading(true); 
+        setLoading(true);
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/seller/login', {
+            const response = await axios.post('http://localhost:4000/api/v1/sellers/login', {
                 username: values.username,
                 password: values.password,
-            },{ withCredentials: true });
-            setSuccess(true);
-            
-            Notifications.show({
-                title: 'Thông báo',
-                message: response.data.message,
-            })
-            setCountdown(3);
+            }, { withCredentials: true });
+
+            if (response.data.success) {
+                setSuccess(true);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                const authStatus = await checkAuthStatus();
+                if (authStatus) {
+                    Notifications.show({
+                        title: 'Thành công',
+                        message: 'Đăng nhập thành công',
+                        color: 'green'
+                    });
+                    navigate('/seller/dashboard', { replace: true });
+                } else {
+                    throw new Error('Không thể xác thực người dùng');
+                }
+            }
         } catch (err) {
-            const errorMessage =  err.response && err.response.data.error 
-                                ?  err.response.data.error 
-                                : 'Đăng nhập thất bại, vui lòng thử lại!';
+            const errorMessage = err.response?.data?.error || 'Đăng nhập thất bại, vui lòng thử lại!';
             Notifications.show({
                 color: 'red',
-                title: 'Thông báo',
+                title: 'Lỗi',
                 message: errorMessage,
-            })
+            });
         } finally {
-            setLoading(false); 
+            setLoading(false);
         }
-    }
+    };
 
     const form = useForm({
         initialValues: {
@@ -63,17 +73,6 @@ function SellerRegister(){
         },
     });
 
-    useEffect(() => {
-        let timer;
-        if (countdown !== null && countdown > 0) {
-            timer = setInterval(() => {
-                setCountdown((prevCountdown) => prevCountdown - 1);
-            }, 1000);
-        } else if (countdown === 0) {
-            navigate('/seller');
-        }
-        return () => clearInterval(timer);
-    }, [countdown, navigate]);
     return <>
         <Container fluid className="shadow-lg p-2">
             <SellerHeader />
@@ -103,7 +102,7 @@ function SellerRegister(){
                         </Group>
                         <Button type="submit" fullWidth mt="xl" loading={loading} >
                             {   loading ? 'Đang đăng nhập...' : 
-                                success ? `Chuyển trang sau ${countdown}s` : 
+                                success ? 'Chuyển trang sau 3s' : 
                                 'Đăng nhập'
                             }
                         </Button>
@@ -119,4 +118,4 @@ function SellerRegister(){
     </>
 }
 
-export default SellerRegister
+export default SellerLogin

@@ -143,8 +143,8 @@ const verifyEmail = async (req: Request, res: Response) => {
         });
 
         // Generate tokens
-        const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '15m' });
-        const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
+        const accessToken = jwt.sign({ userId: user.id, role: user.userType }, accessTokenFromEnv, { expiresIn: '15m' });
+        const refreshToken = jwt.sign({ userId: user.id, role: user.userType }, refreshTokenFromEnv, { expiresIn: '7d' });
 
         // Store refresh token in session
         await prismaService.session.create({
@@ -237,8 +237,8 @@ const signin = async (req: Request, res: Response) => {
             if (!refreshTokenFromEnv) return res.status(500).json({ error: 'Internal server error' });
             
 
-            const accessToken = jwt.sign({ userId: user.id }, accessTokenFromEnv, { expiresIn: '15m' });
-            const refreshToken = jwt.sign({ userId: user.id }, refreshTokenFromEnv, { expiresIn: '7d' });
+            const accessToken = jwt.sign({ userId: user.id, role: user.userType }, accessTokenFromEnv, { expiresIn: '15m' });
+            const refreshToken = jwt.sign({ userId: user.id, role: user.userType }, refreshTokenFromEnv, { expiresIn: '7d' });
             await prismaService.session.create({
                     data: {
                         userId: user.id,

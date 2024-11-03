@@ -9,19 +9,20 @@ async function testGHNService() {
 
     try {
         // Lấy địa chỉ ngẫu nhiên cho người nhận
+        const shopAddress = await ghnService.getRandomAddress();
         const randomAddress = await ghnService.getRandomAddress();
         // Quan trọng: Lấy thông tin địa chỉ shop
         console.log(`${randomAddress.ward.WardName}, ${randomAddress.district.DistrictName}, ${randomAddress.province.ProvinceName}`);
 
         const orderInfo: GHNOrderInfo = {
             // Thông tin người gửi - bắt buộc phải có
-            // from_name: "Shop ABC",
-            // from_phone: "0123456789",
-            // from_address: shopAddress.address,
-            // from_ward_name: shopAddress.ward.WardName,
-            // from_ward_code: shopAddress.ward.WardCode,
-            // from_district_name: shopAddress.district.DistrictName,
-            // from_province_name: shopAddress.province.ProvinceName,
+            from_name: "Shop ABC",
+            from_phone: "0334534719",
+            from_address: `${randomAddress.ward.WardName}, ${randomAddress.district.DistrictName}, ${randomAddress.province.ProvinceName}`,
+            from_ward_name: shopAddress.ward.WardName,
+            from_ward_code: shopAddress.ward.WardCode,
+            from_district_name: shopAddress.district.DistrictName,
+            from_province_name: shopAddress.province.ProvinceName,
 
             // Thông tin người nhận
             to_name: "Nguyen Van A",

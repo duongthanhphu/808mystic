@@ -1,0 +1,49 @@
+  .attribute-group {
+      position: relative;
+
+      gap: 20px;
+  }
+
+  .attribute-group::before {
+      content: '';
+      position: absolute;
+      right: 50%;
+      top: 35px;
+      /* Điều chỉnh vị trí đường ngang */
+      width: 20px;
+      height: 2px;
+      background-color: #ddd;
+  }
+
+  .values-tree {
+      position: relative;
+      padding-left: 20px;
+  }
+
+  .value-item {
+      position: relative;
+  }
+
+  .value-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background-color: #ddd;
+  }
+
+  .value-item::after {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      width: 20px;
+      height: 2px;
+      background-color: #ddd;
+  }
+
+  .value-item:last-child::before {
+      height: 50%;
+  }

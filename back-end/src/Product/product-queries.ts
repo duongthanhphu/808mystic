@@ -84,15 +84,15 @@ const findProductDetail = async (productId: number) => {
         });
 
         if (!product) {
-        throw new Error('Product not found');
+            throw new Error('Product not found');
         }
 
         return product;
     } catch (error: unknown) {
         if (error instanceof Error) {
-        console.error('Error fetching product details:', error.message);
+            console.error('Error fetching product details:', error.message);
         } else {
-        console.error('Unexpected error:', error);
+            console.error('Unexpected error:', error);
         }
         throw error;
     }

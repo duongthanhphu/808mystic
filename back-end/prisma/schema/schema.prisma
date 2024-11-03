@@ -8,6 +8,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MeasurementUnit {
+  GRAM       
+  KILOGRAM   
+  CENTIMETER 
+  METER      
+}
+
+enum UserType {
+  SELLER
+  CUSTOMER
+  ADMIN
+}
+
+enum UserStatus {
+  AVAILABLE
+  UNAVAILABLE
+  BLOCKED
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum EmailVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING             // Mới đặt hàng
+  SELLER_CONFIRMED    // Seller đã xác nhận
+  SELLER_REJECTED     // Seller từ chối
+  SHIPPING            // Đang giao hàng
+  DELIVERED           // Đã giao hàng
+  CANCELLED           // Đã hủy
+  COMPLETED           // Hoàn thành
+}
+
+enum ShippingProviderStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum InventoryStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum MovementType {
+  IMPORT    // Nhập kho
+  EXPORT    // Xuất kho
+}
+
+enum MovementStatus {
+  PENDING   // Chờ duyệt
+  APPROVED  // Đã duyệt
+  COMPLETED // Hoàn thành
+  CANCELLED // Đã hủy
+}
+
+enum AlertType {
+  LOW_STOCK   // Cảnh báo hàng tồn thấp
+  OVERSTOCK   // Cảnh báo vượt tồn kho tối đa
+}
+
+enum ReportType {
+  DAILY
+  MONTHLY 
+  QUARTERLY
+  YEARLY
+}
+
+enum SourceType {
+  PURCHASE_ORDER
+  SALES_ORDER
+  TRANSFER
+  ADJUSTMENT
+  OTHER
+}
+
 model Category {
   id                 Int       @id @default(autoincrement())
   name               String    @db.VarChar(100)
@@ -99,14 +191,8 @@ model Product {
   orderItems              OrderItem[]
   preOrders               PreOrder[]
   images                  Image[]
+  inventory Inventory[]
   @@map("products")
-}
-
-enum MeasurementUnit {
-  GRAM       
-  KILOGRAM   
-  CENTIMETER 
-  METER      
 }
 
 model ClassificationGroup {
@@ -155,8 +241,114 @@ model ProductClassification {
   cart                    Cart[]
   orderItems              OrderItem[]
   preOrders               PreOrder[]
-
+  inventory Inventory[]
   @@map("product_classifications")
+}
+
+model Warehouse {
+  id              Int       @id @default(autoincrement())
+  sellerId        Int      
+  name            String    @db.VarChar(100)
+  code            String    @unique @db.VarChar(50)  
+  address         String    @db.VarChar(255)
+  provinceId      Int
+  districtId      Int 
+  wardId          Int
+  status          WarehouseStatus @default(ACTIVE)
+  description     String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  seller          Seller      @relation(fields: [sellerId], references: [id]) 
+  province        Province  @relation(fields: [provinceId], references: [id])
+  district        District  @relation(fields: [districtId], references: [id])
+  ward            Ward      @relation(fields: [wardId], references: [id])
+  inventory       Inventory[]
+  stockMovements  StockMovement[]
+
+  
+  @@map("warehouses")
+}
+
+// Model tồn kho
+model Inventory {
+  id                Int       @id @default(autoincrement())
+  warehouseId       Int
+  productId         Int
+  classificationId  Int?     
+  quantity          Int      
+  minQuantity       Int      
+  maxQuantity       Int      
+  status            InventoryStatus @default(ACTIVE)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  alerts            InventoryAlert[]
+  stockMovementItems StockMovementItem[]
+
+  // Relations
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  product         Product   @relation(fields: [productId], references: [id])
+  classification  ProductClassification? @relation(fields: [classificationId], references: [id])
+  stockMovements  StockMovement[] @relation("InventoryToStockMovement") // Chỉ giữ 1 định nghĩa relation
+
+  @@unique([warehouseId, productId, classificationId])
+  @@map("inventory")
+}
+
+// Model phiếu nhập/xuất kho
+model StockMovement {
+  id              Int              @id @default(autoincrement())
+  warehouseId     Int
+  type            MovementType  
+  status          MovementStatus  @default(PENDING)
+  note            String?         @db.Text
+  createdBy       Int      
+  approvedBy      Int?     
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  completedAt     DateTime?
+  inventoryId     Int      // Bỏ optional
+
+  // Relations
+  inventory       Inventory @relation("InventoryToStockMovement", fields: [inventoryId], references: [id])
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  creator         User      @relation("CreatedMovements", fields: [createdBy], references: [id])
+  approver        User?     @relation("ApprovedMovements", fields: [approvedBy], references: [id])
+  items           StockMovementItem[]
+
+  @@map("stock_movements") 
+}
+
+// Chi tiết phiếu nhập/xuất
+model StockMovementItem {
+  id              Int       @id @default(autoincrement())
+  movementId      Int
+  inventoryId     Int
+  quantity        Int      // Số lượng nhập/xuất
+  note            String?   @db.Text
+  
+  // Relations
+  movement        StockMovement @relation(fields: [movementId], references: [id])
+  inventory       Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@map("stock_movement_items")
+}
+
+// Model cảnh báo tồn kho
+model InventoryAlert {
+  id              Int       @id @default(autoincrement())
+  inventoryId     Int
+  type            AlertType // LOW_STOCK/OVERSTOCK
+  message         String    @db.Text
+  isRead          Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  readAt          DateTime?
+
+  // Relations  
+  inventory       Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@map("inventory_alerts")
 }
 
 model User {
@@ -190,8 +382,10 @@ model User {
   districtCode            String?
   wardCode                String?
   address                 String?
-  sellerOrders Order[] @relation("SellerOrders")
+  sellerOrders            Order[] @relation("SellerOrders")
   orderStatusHistories    OrderStatusHistory[]
+  createdMovements        StockMovement[] @relation("CreatedMovements")
+  approvedMovements       StockMovement[] @relation("ApprovedMovements")
   @@map("users")
 }
 
@@ -206,16 +400,51 @@ model Seller {
   identificationCode      String?    @db.VarChar(50)
   businessLicense         String?
   approvedAt              DateTime?
-  ghtkShopId              String?    @unique
-  ghtkToken               String?
-  ghtkShopCreatedAt       DateTime?
   createdAt               DateTime   @default(now())
   updatedAt               DateTime?  @updatedAt
   deletedAt               DateTime?
   addresses               Address[]
   status                  SellerStatus @default(PENDING)
   user                    User       @relation(fields: [userId], references: [id])
+  shippingConfigs         SellerShippingConfig[]
+  warehouses              Warehouse[]
   @@map("sellers")
+}
+
+model ShippingProvider {
+  id                    Int       @id @default(autoincrement())
+  name                  String    @db.VarChar(100)
+  code                  String    @unique @db.VarChar(50)  // Mã định danh của đơn vị vận chuyển
+  website               String?   @db.VarChar(255)
+  apiEndpoint           String    @db.VarChar(255)
+  description           String?   @db.Text
+  policies              String?   @db.Text  // Chính sách kiểm tra hàng
+  status                ShippingProviderStatus @default(ACTIVE)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  sellerShippingConfigs SellerShippingConfig[]
+
+  @@map("shipping_providers")
+}
+
+// Model cho cấu hình vận chuyển của seller
+model SellerShippingConfig {
+  id                  Int       @id @default(autoincrement())
+  sellerId            Int
+  shippingProviderId  Int
+  shopId              String    @db.VarChar(100)  // Shop ID của seller trên hệ thống vận chuyển
+  token               String    @db.Text          // Token xác thực với đơn vị vận chuyển
+  isDefault           Boolean   @default(false)   // Đặt làm đơn vị vận chuyển mặc định
+  status              String    @default("active")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+  seller              Seller    @relation(fields: [sellerId], references: [id])
+  shippingProvider    ShippingProvider @relation(fields: [shippingProviderId], references: [id])
+
+  @@unique([sellerId, shippingProviderId])
+  @@map("seller_shipping_configs")
 }
 
 model Session {
@@ -230,6 +459,7 @@ model Session {
 
 model Address {
   id                      Int       @id @default(autoincrement())
+  addressDetail           String    @db.VarChar(255)
   provinceId              Int
   districtId              Int
   wardId                  Int
@@ -261,6 +491,7 @@ model Province {
   AdministrativeRegionId Int?
   districts              District[]
   addresses              Address[]
+  warehouses Warehouse[]
 }
 
 model District {
@@ -277,6 +508,7 @@ model District {
   province                Province  @relation(fields: [ProvinceCode], references: [Code])
   wards                   Ward[]
   addresses               Address[]
+  warehouses Warehouse[]
 }
 
 model Ward {
@@ -292,31 +524,7 @@ model Ward {
   AdministrativeUnitId    Int?
   district                District  @relation(fields: [DistrictCode], references: [Code])
   addresses               Address[]
-}
-
-enum UserType {
-  SELLER
-  CUSTOMER
-  ADMIN
-}
-
-enum UserStatus {
-  AVAILABLE
-  UNAVAILABLE
-  BLOCKED
-}
-
-enum SellerStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  SUSPENDED
-}
-
-enum EmailVerificationStatus {
-  PENDING
-  VERIFIED
-  FAILED
+  warehouses Warehouse[]
 }
 
 model Image {
@@ -350,28 +558,18 @@ model Cart {
   @@map("carts")
 }
 
-enum OrderStatus {
-  PENDING             // Mới đặt hàng
-  SELLER_CONFIRMED   // Seller đã xác nhận
-  SELLER_REJECTED   // Seller từ chối
-  SHIPPING         // Đang giao hàng
-  DELIVERED        // Đã giao hàng
-  CANCELLED        // Đã hủy
-  COMPLETED        // Hoàn thành
-}
-
 model Order {
   id                Int               @id @default(autoincrement())
   userId            Int
   sellerId          Int   
   shippingAddressId Int?
   totalAmount       Decimal           @db.Decimal(10, 2)
-  sellerNote        String?          // Ghi chú của seller
-  shippingCode      String?          // Mã vận đơn
-  shippingMethod    String?          // Phương thức vận chuyển
+  sellerNote        String?          
+  shippingCode      String?          
+  shippingMethod    String?         
   shippingFee       Decimal?         @db.Decimal(10, 2)
-  createdBy         Int?              // ID của user/ seller tạo ra đơn hàng
-  confirmedAt       DateTime?        // Thời gian seller xác nhận
+  createdBy         Int?              
+  confirmedAt       DateTime?        
   orderDate         DateTime          @default(now())
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
@@ -456,4 +654,12 @@ model Notification {
 
   @@map("notifications")
 }
+
+
+
+
+
+
+
+
 

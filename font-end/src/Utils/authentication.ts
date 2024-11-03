@@ -1,12 +1,19 @@
 // utils/auth.ts
 import { jwtDecode } from 'jwt-decode';
 
+export enum UserType {
+    SELLER = 'SELLER',
+    CUSTOMER = 'CUSTOMER'
+}
+
 interface DecodedToken {
     exp: number;
+    userId: string;
+    role: UserType; 
     [key: string]: any;
 }
 
-export const checkAuthStatus = async (): Promise<boolean> => {
+export const checkAuthStatus = async (requiredRole?: UserType): Promise<boolean> => {
     const accessToken = getCookie('accessToken');
     if (!accessToken) return false;
 
@@ -15,22 +22,27 @@ export const checkAuthStatus = async (): Promise<boolean> => {
         const currentTime = Date.now() / 1000;
         
         if (decodedToken.exp > currentTime) {
+            if (requiredRole) {
+                return decodedToken.role === requiredRole;
+            }
             return true;
-        } else {
-            return await refreshAccessToken();
         }
+        return await refreshAccessToken();
     } catch (error) {
         console.error('Error decoding token:', error);
         return false;
     }
 };
 
-export const getUserId = (): string | null => {
+export const getUserId = (role?: UserType): string | null => {
     const accessToken = getCookie('accessToken');
     if (!accessToken) return null;
 
     try {
         const decodedToken = jwtDecode<DecodedToken>(accessToken);
+        if (role) {
+            return decodedToken.role === role ? decodedToken.userId : null;
+        }
         return decodedToken.userId;
     } catch (error) {
         console.error('Error decoding token:', error);

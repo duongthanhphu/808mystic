@@ -12,10 +12,12 @@ import {
     orderRouter,
     addressRouter,
     sellerRouter,
-    shipmentRouter
+    shipmentRouter,
+    warehouseRouter,
+    inventoryRouter
 } from './routes';
 import { loadCategories, loadAddresses } from './seeds';
-
+import shippingRouter from './ShippingProvider/shipping-routers';
 // Uncomment these lines if you want to run the seed functions to initial Data
 // loadCategories();
 // loadAddresses();
@@ -43,6 +45,9 @@ const configureRoutes = (app: express.Application) => {
     app.use(PATH.ADDRESS, addressRouter);
     app.use(PATH.SELLER, sellerRouter);
     app.use(PATH.SHIPMENT, shipmentRouter);
+    app.use(PATH.SHIPPING_PROVIDER, shippingRouter);
+    app.use(PATH.WAREHOUSE, warehouseRouter);
+    app.use(PATH.INVENTORY, inventoryRouter);
 };
 
 const initializeServer = () => {
