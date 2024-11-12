@@ -1,10 +1,17 @@
 import { Request, Response } from 'express';
 import inventoryService from './inventory-services';
+import prismaService from '../../prisma.service';
 import { InventoryStatus } from '@prisma/client';
 
 const getInventoryList = async (req: Request, res: Response) => {
     try {
         const { sellerId } = req.params;
+        const userFromServer = await prismaService.user.findUnique({
+            where: { id: Number(sellerId) },
+            include: {
+                seller: true
+            }
+        })
         const { 
             warehouseId, 
             status,
@@ -14,7 +21,7 @@ const getInventoryList = async (req: Request, res: Response) => {
         } = req.query;
 
         const result = await inventoryService.getInventoryList(
-            Number(sellerId),
+            userFromServer?.seller?.id as number,
             {
                 warehouseId: warehouseId ? Number(warehouseId) : undefined,
                 status: status as InventoryStatus,

@@ -36,7 +36,7 @@ const createProductHandler = async (req: Request, res: Response) => {
             console.error("Lỗi khi parse dữ liệu:", error);
             return res.status(400).json({ error: "Dữ liệu không hợp lệ" });
         }
-
+        console.log(attributeValues)
         const createdProduct = await productService.createProductService(
             { ...productData, hasClassification },
             attributeValues,
@@ -45,12 +45,21 @@ const createProductHandler = async (req: Request, res: Response) => {
             files
         );
         
-
+        console.log("createdProduct.sellerId", createdProduct.sellerId)
+        const userFromServer = await prismaService.user.findUnique({ 
+                where: { id: createdProduct.sellerId },
+                include: {
+                    seller: true
+                }
+            }); 
+        const warehouseFromServer = await prismaService.warehouse.findFirst({ 
+                where: { sellerId: userFromServer?.seller?.id },
+            }); 
         // Tạo inventory sau khi tạo sản phẩm thành công
         try {
             const inventories = await inventoryService.createInventoryForProduct(
                 createdProduct.id,
-                8, // hard code warehouse id [HOT FIX]
+                warehouseFromServer?.id as number, 
                 createdProduct.sellerId
             );
 
@@ -103,6 +112,7 @@ const findByIdHandler = async (req: Request, res: Response) => {
 const findAllHandler = async (req: Request, res: Response) => {
     const { page = 1, pageSize = 10 } = req.query;
     try {
+
         const productsFromsServer = await productService.findAllService(Number(page), Number(pageSize))
         res.json({
             message: 'success',
@@ -131,10 +141,76 @@ const imageTester = async (req: Request, res: Response) => {
     }
 }
 
+const searchProductsHandler = async (req: Request, res: Response) => {
+  try {
+    const {
+      searchTerm,
+      categoryId,
+      minPrice,
+      maxPrice,
+      attributes,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    const result = await productService.searchProducts({
+      searchTerm: searchTerm as string,
+      categoryId: categoryId ? Number(categoryId) : undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      attributes: attributes ? JSON.parse(attributes as string) : undefined,
+      page: Number(page),
+      limit: Number(limit)
+    });
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error searching products:", error);
+    return res.status(500).json({ error: "An error occurred while searching products" });
+  }
+};
+
+const filterByCategoryHandler = async (req: Request, res: Response) => {
+  try {
+    const {
+      categoryId,
+      minPrice,
+      maxPrice,
+      attributes,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    if (!categoryId) {
+      return res.status(400).json({ error: "Category ID is required" });
+    }
+
+    const result = await productService.filterByCategory({
+      categoryId: Number(categoryId),
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      attributes: attributes ? JSON.parse(attributes as string) : undefined,
+      sortBy: sortBy as string,
+      sortOrder: sortOrder as 'asc' | 'desc',
+      page: Number(page),
+      limit: Number(limit)
+    });
+
+    return res.json(result);
+  } catch (error) {
+    console.error("Error filtering products:", error);
+    return res.status(500).json({ error: "An error occurred while filtering products" });
+  }
+};
+
 export default { 
     createProductHandler,
     findAllHandler,
     findByIdHandler,
-    imageTester
+    imageTester,
+    searchProductsHandler,
+    filterByCategoryHandler
 
 };

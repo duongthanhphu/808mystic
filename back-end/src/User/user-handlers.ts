@@ -41,9 +41,9 @@ const registerWithVerification = async (req: Request, res: Response) => {
         email, 
         fullName,
         avatar,
-        provinceCode,
-        districtCode,
-        wardCode,
+        provinceId,
+        districtId,
+        wardId,
         address
     } = req.body;
 
@@ -80,15 +80,32 @@ const registerWithVerification = async (req: Request, res: Response) => {
             otp,
             otpExpires,
             createdAt: new Date(),
-            provinceCode,
-            districtCode,
-            wardCode,
-            address
         };
+        const province = await prismaService.province.findUnique({ where: { id: Number(provinceId) } });
+        const district = await prismaService.district.findUnique({ where: { id: Number(districtId) } });
+        const ward = await prismaService.ward.findUnique({ where: { id: Number(wardId) } });
 
-        await prismaService.user.create({ data: userFromClient });
+            if (!province || !district || !ward) {
+                throw new Error('Thông tin địa chỉ không hợp lệ');
+            }
+
+            
+        
+        const userFromServer = await prismaService.user.create({ data: userFromClient });
         await sendVerificationEmail(email, otp);
+        await prismaService.address.create({
+                data: {
+                    addressDetail: address,
+                    provinceId: Number(provinceId),
+                    districtId: Number(districtId),
+                    wardId: Number(wardId),
+                    userId: userFromServer.id
+                }
+            });
 
+            if (!address) {
+                throw new Error('Lỗi tạo địa chỉ');
+            }
         res.status(201).json({ 
             message: "Registration successful. Please check your email for verification code."
         });

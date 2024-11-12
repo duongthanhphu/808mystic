@@ -120,7 +120,7 @@ export default function ProductDetail() {
     const handleBuyNow = async () => {
         if (!isAllOptionsSelected() || quantity < 1) return;
 
-        const userId = getUserId();
+        const userId = getUserId(UserType.CUSTOMER);
         if (!userId) {
             notifications.show({
                 title: 'Yêu cầu đăng nhập',
@@ -138,43 +138,27 @@ export default function ProductDetail() {
 
         if (!(await checkUserAddress(userId))) return;
 
-        if (!isAllOptionsSelected() || quantity < 1) {
-            notifications.show({
-                title: 'Lỗi',
-                message: 'Vui lòng chọn đầy đủ tùy chọn và số lượng',
-                color: 'red'
-            });
-            return;
-        }
-
         const selectedClassification = getSelectedClassification();
+        setCartLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:4000/api/v1/orders', {
-                userId,
-                items: [{
-                    productId: product.id,
-                    classificationId: selectedClassification.id,
-                    quantity: quantity,
-                    price: selectedClassification.price
-                }]
+            // Thêm vào giỏ hàng trước
+            await axios.post('http://localhost:4000/api/v1/carts', {
+                classificationId: selectedClassification.id,
+                quantity: quantity,
+                userId: userId
             });
 
-            if (response.status === 201) {
-                notifications.show({
-                    title: 'Thành công',
-                    message: 'Đơn hàng đã được tạo',
-                    color: 'green'
-                });
-                navigate('/order-confirmation', { state: { orderId: response.data.order.id } });
-            }
-        } catch (error) {
-            console.error('Lỗi khi tạo đơn hàng:', error);
+            // Chuyển hướng đến trang giỏ hàng
+            navigate(`/shopping-cart/${userId}`);
+        } catch (err) {
             notifications.show({
                 title: 'Lỗi',
-                message: 'Không thể tạo đơn hàng',
+                message: 'Không thể thêm vào giỏ hàng',
                 color: 'red'
             });
+        } finally {
+            setCartLoading(false);
         }
     };
 

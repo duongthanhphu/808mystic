@@ -48,3 +48,34 @@ export interface ProductFilterQuery {
     sortBy?: 'price' | 'createdAt' | 'name';
     sortOrder?: 'asc' | 'desc';
 }
+
+export interface SearchProductsParams {
+    searchTerm?: string;
+    categoryId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    attributes?: Array<{
+        attributeId: number;
+        values: any[];
+    }>;
+    page?: number;
+    limit?: number;
+}
+
+export interface FilterProductsParams {
+    categoryId: number;
+    minPrice?: number;
+    maxPrice?: number;
+    attributes?: Array<{
+        attributeId: number;
+        values: any[];
+    }>;
+    classifications?: Array<{
+        option1Id?: number;
+        option2Id?: number;
+    }>;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+}

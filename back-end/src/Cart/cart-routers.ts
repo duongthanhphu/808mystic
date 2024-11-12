@@ -6,7 +6,7 @@ const router = express.Router();
 
 router
     .get('/', handler.findCarts)
-    .get('/:id', handler.findCartById)
+    .get('/:userId', handler.findCartById)
     .post('/', handler.createCart)
     .put('/:itemId', handler.updateCart)
     // .put('/:itemId', handler.deleteCart)

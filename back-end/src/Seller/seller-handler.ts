@@ -18,25 +18,58 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
         wardId 
     } = req.body;
     
+    // Input validation
     if (!username || !email || !phone || !storeName || !pickUpAddress || !provinceId || !districtId || !wardId) {
         return res.status(400).json({ error: 'Thiếu thông tin bắt buộc' });
     }
-    const passwordClient = passwordBcrypt.passwordGenerate(password);
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Email không hợp lệ' });
+    }
+
+    // Validate phone format (Vietnam phone number)
+    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+    if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Số điện thoại không hợp lệ' });
+    }
+
+    let passwordClient = null;
+    if (password) {
+        passwordClient = passwordBcrypt.passwordGenerate(password);
+    }
+
     try {
+        // Kiểm tra email đã tồn tại và là seller chưa
+        const existingUser = await prismaService.user.findUnique({
+            where: { email },
+            include: { seller: true }
+        });
+
+        // If user exists and is already a seller
+        if (existingUser?.seller) {
+            return res.status(400).json({ 
+                error: 'Email này đã được đăng ký làm người bán' 
+            });
+        }
+
         const result = await prismaService.$transaction(async (prisma) => {
-            // Find or create User
-            const user = await prisma.user.upsert({
+            // Create or update user
+            const userFromServer = await prisma.user.upsert({
                 where: { email },
                 update: {
                     userType: UserType.SELLER,
                     status: UserStatus.UNAVAILABLE,
+                    phone: phone,
+                    username: existingUser ? existingUser.username : username
                 },
                 create: {
                     username,
                     email,
                     phone,
-                    passwordSalt: password ? passwordClient.salt : '',
-                    passwordHash: password ? passwordClient.hash : '',
+                    passwordSalt: passwordClient?.salt || '',
+                    passwordHash: passwordClient?.hash || '',
                     passwordIterations: 10000,
                     avatar: 'default_avatar.png',
                     fullName: username,
@@ -46,71 +79,98 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
                     emailVerificationStatus: EmailVerificationStatus.PENDING,
                 },
             });
-            console.log(passwordBcrypt.comparePassword(password, user.passwordSalt, user.passwordHash));
 
-            // Find or create Seller
-            const seller = await prisma.seller.upsert({
-                where: { userId: user.id },
-                update: {
-                    storeName,
-                    pickupAddress: pickUpAddress,
-                    status: SellerStatus.PENDING,
-                },
-                create: {
-                    userId: user.id,
-                    storeName,
-                    pickupAddress: pickUpAddress,
-                    email: user.email || '',
-                    status: SellerStatus.PENDING,
-                },
-            });
+            // Validate location IDs exist
+            const province = await prisma.province.findUnique({ where: { id: Number(provinceId) } });
+            const district = await prisma.district.findUnique({ where: { id: Number(districtId) } });
+            const ward = await prisma.ward.findUnique({ where: { id: Number(wardId) } });
 
-            const sellerAddress = await prisma.address.upsert({
-                where: { 
-                    userId_sellerId: {
-                        userId: user.id,
-                        sellerId: seller.id
-                    }
-                },
-                update: {
-                    provinceId,
-                    districtId,
-                    wardId,
-                },
-                create: {
-                    userId: user.id,
-                    sellerId: seller.id,
-                    provinceId,
-                    districtId,
-                    wardId,
-                },
-            });
+            if (!province || !district || !ward) {
+                throw new Error('Thông tin địa chỉ không hợp lệ');
+            }
 
-            const defaultWarehouse = await prisma.warehouse.create({
+            // Create address
+            const address = await prisma.address.create({
                 data: {
-                    sellerId: seller.id,
-                    name: "Kho mặc định",
-                    code: `WH-${seller.id}-${Date.now()}`,
-                    address: pickUpAddress,
-                    provinceId: Number(sellerAddress.provinceId),
-                    districtId: Number(sellerAddress.districtId),
-                    wardId: Number(sellerAddress.wardId),
-                    status: "ACTIVE",
-                    description: "Kho hàng mặc định được tạo tự động"
+                    addressDetail: pickUpAddress,
+                    provinceId: Number(provinceId),
+                    districtId: Number(districtId),
+                    wardId: Number(wardId),
+                    userId: userFromServer.id
                 }
             });
 
+            if (!address) {
+                throw new Error('Lỗi tạo địa chỉ');
+            }
 
-            return { user, seller, defaultWarehouse };
+            // Create or update seller
+            const sellerFromServer = await prisma.seller.upsert({
+                where: { userId: userFromServer.id },
+                update: {
+                    storeName,
+                    pickupAddress: pickUpAddress,
+                    status: SellerStatus.PENDING,
+                },
+                create: {
+                    userId: userFromServer.id,
+                    storeName,
+                    pickupAddress: pickUpAddress,
+                    email: userFromServer.email || '',
+                    status: SellerStatus.PENDING,
+                },
+            });
+
+            // Create seller address
+            const sellerAddress = await prisma.address.upsert({
+                where: { 
+                    userId_sellerId: {
+                        userId: userFromServer.id,
+                        sellerId: sellerFromServer.id
+                    }
+                },
+                update: {
+                    provinceId: Number(provinceId),
+                    districtId: Number(districtId),
+                    wardId: Number(wardId),
+                    addressDetail: pickUpAddress
+                },
+                create: {
+                    userId: userFromServer.id,
+                    sellerId: sellerFromServer.id,
+                    addressDetail: pickUpAddress,
+                    provinceId: Number(provinceId),
+                    districtId: Number(districtId),
+                    wardId: Number(wardId),
+                },
+            });
+
+            // Create default warehouse
+            const defaultWarehouse = await prisma.warehouse.create({
+                data: {
+                    sellerId: sellerFromServer.id,
+                    name: "Kho mặc định",
+                    code: `WH-${sellerFromServer.id}-${Date.now()}`,
+                    address: pickUpAddress,
+                    provinceId: Number(provinceId),
+                    districtId: Number(districtId),
+                    wardId: Number(wardId),
+                    status: "ACTIVE",
+                    description: "Kho hàng mặc định được tạo tự động theo địa chỉ của người dùng."
+                }
+            });
+
+            return { userFromServer, sellerFromServer, defaultWarehouse };
         });
 
-        if (!result.user.emailVerified) {
+        // Send verification email if needed
+        if (!result.userFromServer.emailVerified) {
             const otp = generateOTP().substring(0, 4);
             await prismaService.user.update({
-                where: { id: result.user.id },
+                where: { id: result.userFromServer.id },
                 data: { 
                     otp,
-                    otpExpires: new Date(Date.now() + 15 * 60 * 1000)
+                    otpExpires: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
                 }
             });
 
@@ -118,18 +178,30 @@ const registerOrUpgradeToSeller = async (req: Request, res: Response) => {
 
             return res.status(201).json({
                 message: "Vui lòng kiểm tra email để xác thực và hoàn tất đăng ký người bán.",
-                userId: result.user.id,
-                warehouseId: result.defaultWarehouse.id // Thêm warehouseId vào response
+                userId: result.userFromServer.id,
+                warehouseId: result.defaultWarehouse.id
             });
         } else {
             return res.status(200).json({
                 message: "Tài khoản đã được nâng cấp thành người bán thành công",
-                sellerId: result.seller.id
+                sellerId: result.sellerFromServer.id
             });
         }
     } catch (error) {
         console.error('Lỗi trong quá trình đăng ký/nâng cấp người bán:', error);
-        return res.status(500).json({ error: 'Lỗi xử lý yêu cầu', details: error });
+        
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return res.status(400).json({ 
+                    error: 'Email hoặc username đã tồn tại trong hệ thống' 
+                });
+            }
+        }
+
+        return res.status(500).json({ 
+            error: 'Lỗi xử lý yêu cầu', 
+            details: error instanceof Error ? error.message : 'Unknown error' 
+        });
     }
 };
 

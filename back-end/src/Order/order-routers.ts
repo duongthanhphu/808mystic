@@ -3,10 +3,12 @@ import handler from './order-handlers';
 
 const router = express.Router();
 
-router.get('/', handler.printOrder)
-        .get('/:orderId', handler.orderDetail)
-        .post('/:orderId/confirm', handler.confirmOrderBySeller)
-        .post('/', handler.createOrder)
-
+router.post('/:userId/checkout', handler.checkoutOrder)
+//       .get('/:orderId', handler.orderDetail)
+      .post('/', handler.createOrder)
+      .post('/:orderId/confirm', handler.confirmOrderBySeller)
+      .get('/user/:userId', handler.getUserOrders)
+      
+  
 
 export default router;

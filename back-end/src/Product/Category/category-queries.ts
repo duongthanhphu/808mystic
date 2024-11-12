@@ -82,21 +82,29 @@ const findAttributesByCategoryId = async (categoryId: string, page: number = 1, 
     try {
         return await paginateQuery(
             (skip, take) => prismaService.categoryAttribute.findMany({
-                where: { categoryId: Number(categoryId) },
-                include: { category: true },
-                orderBy: { createdAt: 'asc' },
+                where: {
+                    categoryId: Number(categoryId)
+                },
+                include: {
+                    category: true
+                },
+                orderBy: {
+                    createdAt: "asc"
+                },
                 skip,
-                take,
+                take
             }),
-            () => prismaService.categoryAttribute.count({ where: { categoryId: Number(categoryId) } }),
+            () => prismaService.categoryAttribute.count({
+                where: {
+                    categoryId: Number(categoryId)
+                }
+            }),
             page,
             pageSize
         );
     } catch (error) {
         console.error('Error in findAttributesByCategoryId:', error);
-        throw new Error('Unable to fetch attributes for the specified category.');
-    } finally {
-        await prismaService.$disconnect();
+        throw error;
     }
 };
 

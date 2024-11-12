@@ -110,8 +110,8 @@ export default function HomePage(){
                     {categories.map((category) => (
                         <div 
                             key={category.id}
-                            className="shadown-lg border-blue-500 bg-transparent  border bottom-5 rounded-md min-h-16 text-center cursor-pointer hover:text-blue-500"
-                            // onClick={() => navigate(`/category/${category.slug}`)}
+                            className="shadown-lg border-blue-500 bg-transparent border bottom-5 rounded-md min-h-16 text-center cursor-pointer hover:text-blue-500"
+                            onClick={() => navigate(`/category/${category.id}`)}
                         >
                             <Text size="md" className='my-5 font-semibold'>{category.name}</Text>
                         </div>

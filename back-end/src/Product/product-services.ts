@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { handlePrismaError } from '../Utils/DatabaseError'
-import {Product, AttributeValue, ClassificationGroup, ProductClassification, ProductFilterQuery} from './product-model'
+import {Product, AttributeValue, ClassificationGroup, ProductClassification, ProductFilterQuery, SearchProductsParams, FilterProductsParams} from './product-model'
 import query from './product-queries'
 import imageService from '../Image/image-services'
 const prisma = new PrismaClient();
@@ -203,11 +203,224 @@ const removeProductClassification = async (classificationId: number) => {
     });
 };
 
+const searchProducts = async ({
+  searchTerm,
+  categoryId,
+  minPrice,
+  maxPrice,
+  attributes,
+  page = 1,
+  limit = 10
+}: SearchProductsParams) => {
+  const where: Prisma.ProductWhereInput = {
+    status: "available",
+    deletedAt: null,
+    AND: [
+      searchTerm ? {
+        OR: [
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { shortDescription: { contains: searchTerm, mode: 'insensitive' } }
+        ]
+      } : {},
+      categoryId ? { categoryId } : {},
+      // Xử lý điều kiện giá
+      minPrice || maxPrice ? {
+        OR: [
+          // Cho sản phẩm không có phân loại
+          {
+            hasClassification: false,
+            classifications: {
+              some: {
+                AND: [
+                  minPrice ? { price: { gte: minPrice } } : {},
+                  maxPrice ? { price: { lte: maxPrice } } : {}
+                ]
+              }
+            }
+          },
+          // Cho sản phẩm có phân loại
+          {
+            hasClassification: true,
+            classifications: {
+              some: {
+                AND: [
+                  minPrice ? { price: { gte: minPrice } } : {},
+                  maxPrice ? { price: { lte: maxPrice } } : {}
+                ]
+              }
+            }
+          }
+        ]
+      } : {},
+      // Xử lý điều kiện thuộc tính
+      ...attributes?.map(attr => ({
+        ProductAttributeValue: {
+          some: {
+            attributeValue: {
+              categoryAttributeValueId: attr.attributeId,
+              value: { in: attr.values }
+            }
+          }
+        }
+      })) ?? []
+    ]
+  };
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: {
+        category: true,
+        ProductAttributeValue: {
+          include: {
+            attributeValue: true
+          }
+        },
+        classifications: true,
+        images: true
+      },
+      skip: (page - 1) * limit,
+      take: limit
+    }),
+    prisma.product.count({ where })
+  ]);
+
+  return {
+    products,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+};
+
+
+
+const filterByCategory = async ({
+  categoryId,
+  minPrice,
+  maxPrice,
+  attributes,
+  sortBy = 'createdAt',
+  sortOrder = 'desc',
+  page = 1,
+  limit = 10
+}: FilterProductsParams) => {
+  console.log('Received filter params:', { categoryId, minPrice, maxPrice, attributes });
+
+  // Parse attributes nếu nó là string
+  const parsedAttributes = typeof attributes === 'string' ? JSON.parse(attributes) : attributes;
+  console.log('Parsed attributes:', parsedAttributes);
+
+  const where: Prisma.ProductWhereInput = {
+    status: "available",
+    deletedAt: null,
+    AND: [
+      // Điều kiện về category
+      {
+        OR: [
+          { categoryId },
+          {
+            category: {
+              path: {
+                contains: `/${categoryId}/`
+              }
+            }
+          }
+        ]
+      },
+      // Điều kiện về giá
+      minPrice || maxPrice ? {
+        classifications: {
+          some: {
+            AND: [
+              minPrice ? { price: { gte: minPrice } } : {},
+              maxPrice ? { price: { lte: maxPrice } } : {}
+            ]
+          }
+        }
+      } : {},
+      // Điều kiện về thuộc tính sản phẩm
+      ...(parsedAttributes && parsedAttributes.length > 0 ? parsedAttributes.map((attr: any) => ({
+        ProductAttributeValue: {
+          some: {
+            attributeValue: {
+              AND: [
+                { categoryAttributeValueId: attr.attributeId },
+                { 
+                  value: {
+                    equals: JSON.stringify({
+                      originName: [{ id: Number(attr.values[0]) }]
+                    })
+                  }
+                }
+              ]
+            }
+          }
+        }
+      })) : [])
+    ]
+  };
+
+  console.log('Generated where clause:', JSON.stringify(where, null, 2));
+
+  try {
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          ProductAttributeValue: {
+            include: {
+              attributeValue: true
+            }
+          },
+          classifications: true,
+          images: true
+        },
+        orderBy: sortBy === 'price' 
+          ? {
+              createdAt: sortOrder
+            }
+          : { [sortBy]: sortOrder },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    // Sắp xếp theo giá sau khi query nếu cần
+    if (sortBy === 'price') {
+      products.sort((a, b) => {
+        const priceA = Math.min(...a.classifications.map(c => Number(c.price)));
+        const priceB = Math.min(...b.classifications.map(c => Number(c.price)));
+        return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
+      });
+    }
+
+    return {
+      products,
+      metadata: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  } catch (error) {
+    console.error('Error in filterByCategory:', error);
+    throw error;
+  }
+};
 export default {
     createProductService,
     uploadProductImages,
     findByIdService,
     findAllService,
     addProductClassification,
-    removeProductClassification
+    removeProductClassification,
+    searchProducts,
+    filterByCategory
 }

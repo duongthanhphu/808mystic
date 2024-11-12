@@ -88,6 +88,36 @@ export interface GHNOrderInfo {
     cod_failed_amount?: number;
 }
 
+interface CalculateShippingFeeRequest {
+    from_district_id: number;
+    from_ward_code: string;
+    to_district_id: number;
+    to_ward_code: string;
+    weight: number;
+    length?: number;
+    width?: number;
+    height?: number;
+    service_id?: number;
+    service_type_id?: number;
+    insurance_value?: number;
+    coupon?: string;
+}
+
+// Thêm interface cho response tính phí ship
+interface ShippingFeeResponse {
+    total: number;
+    service_fee: number;
+    insurance_fee: number;
+    pick_station_fee: number;
+    coupon_value: number;
+    r2s_fee: number;
+    document_return: number;
+    double_check: number;
+    cod_fee: number;
+    pick_remote_areas_fee: number;
+    deliver_remote_areas_fee: number;
+    cod_failed_fee: number;
+}
 export default class GHNService {
     private client: AxiosInstance;
     private readonly baseURL = {
@@ -157,9 +187,9 @@ export default class GHNService {
                 order_code,
                 ...updateData
             });
-        return response.data;
+            return response.data;
         } catch (error: any) {
-        throw new Error(`Failed to update order: ${error}`);
+            throw new Error(`Failed to update order: ${error}`);
         }
     }
 
@@ -169,9 +199,9 @@ export default class GHNService {
             const response = await this.client.post('/shiip/public-api/v2/switch-status/cancel', {
                 order_codes: [order_code]
             });
-        return response.data;
+            return response.data;
         } catch (error: any) {
-        throw new Error(`Failed to cancel order: ${error}`);
+            throw new Error(`Failed to cancel order: ${error}`);
         }
     }
 
@@ -183,7 +213,7 @@ export default class GHNService {
             });
         return response.data;
         } catch (error: any) {
-        throw new Error(`Failed to return order: ${error}`);
+            throw new Error(`Failed to return order: ${error}`);
         }
     }
 
@@ -232,6 +262,69 @@ export default class GHNService {
         }
     }
 
+    async calculateShippingFee(params: CalculateShippingFeeRequest): Promise<ShippingFeeResponse> {
+        try {
+            const response = await this.client.post(
+                '/shiip/public-api/v2/shipping-order/fee', 
+                {
+                    ...params,
+                    insurance_value: params.insurance_value || 0,
+                    service_id: params.service_id || null,
+                    service_type_id: params.service_type_id || 2, // 2 là E-Commerce Delivery
+                },
+                {
+                    headers: {
+                        'ShopId': this.config.shopId.toString(),
+                        'Token': this.config.token
+                    }
+                }
+            );
+
+            if (response.data.code !== 200) {
+                throw new Error(response.data.message || 'Lỗi khi tính phí vận chuyển');
+            }
+
+            return response.data.data;
+        } catch (error: any) {
+            console.error('Lỗi khi tính phí vận chuyển:', error.response?.data || error.message);
+            throw new Error(`Không thể tính phí vận chuyển: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    // Helper function để tính phí ship đơn giản hơn
+    async calculateSimpleShippingFee({
+        fromDistrictId,
+        fromWardCode,
+        toDistrictId,
+        toWardCode,
+        weight,
+        insuranceValue = 0
+    }: {
+        fromDistrictId: number;
+        fromWardCode: string;
+        toDistrictId: number;
+        toWardCode: string;
+        weight: number;
+        insuranceValue?: number;
+    }): Promise<number> {
+        try {
+            const response = await this.calculateShippingFee({
+                from_district_id: fromDistrictId,
+                from_ward_code: fromWardCode,
+                to_district_id: toDistrictId,
+                to_ward_code: toWardCode,
+                weight,
+                insurance_value: insuranceValue,
+                service_type_id: 2 // Mặc định sử dụng dịch vụ E-Commerce
+            });
+
+            return response.total;
+        } catch (error) {
+            console.error('Lỗi khi tính phí vận chuyển đơn giản:', error);
+            return 0;
+        }
+    }
+
     // 11. Lấy danh sách bưu cục
     async getStores(district_id: number) {
         try {
@@ -261,7 +354,6 @@ export default class GHNService {
             const response = await this.client.get('/shiip/public-api/master-data/district', {
                 params: { province_id }
             });
-            console.log(response.data.data)
             return response.data.data;
         } catch (error: any) {
             throw new Error(`Không thể lấy danh sách quận/huyện: ${error.message}`);
@@ -273,9 +365,7 @@ export default class GHNService {
         try {
             const response = await this.client.get('/shiip/public-api/master-data/ward', {
                 params: { district_id }
-            });
-            console.log(response.data.data)
-            return response.data.data;
+            });            return response.data.data;
         } catch (error: any) {
             throw new Error(`Không thể lấy danh sách phường/xã: ${error.message}`);
         }

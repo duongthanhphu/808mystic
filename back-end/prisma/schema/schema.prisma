@@ -247,10 +247,10 @@ model ProductClassification {
 
 model Warehouse {
   id              Int       @id @default(autoincrement())
-  sellerId        Int      
+  sellerId        Int       
   name            String    @db.VarChar(100)
   code            String    @unique @db.VarChar(50)  
-  address         String    @db.VarChar(255)
+  address         String?   @db.VarChar(255)
   provinceId      Int
   districtId      Int 
   wardId          Int
@@ -261,9 +261,9 @@ model Warehouse {
   deletedAt       DateTime?
 
   seller          Seller      @relation(fields: [sellerId], references: [id]) 
-  province        Province  @relation(fields: [provinceId], references: [id])
-  district        District  @relation(fields: [districtId], references: [id])
-  ward            Ward      @relation(fields: [wardId], references: [id])
+  province        Province    @relation(fields: [provinceId], references: [id])
+  district        District    @relation(fields: [districtId], references: [id])
+  ward            Ward        @relation(fields: [wardId], references: [id])
   inventory       Inventory[]
   stockMovements  StockMovement[]
 
@@ -352,11 +352,13 @@ model InventoryAlert {
 }
 
 model User {
+  userType                UserType   @default(CUSTOMER)
+  status                  UserStatus @default(AVAILABLE)
   id                      Int        @id @default(autoincrement())
   username                String     @unique @db.VarChar(50)
+  passwordIterations      Int        @default(10000)  
   passwordSalt            String     @db.VarChar(255)
   passwordHash            String     @db.VarChar(255)
-  passwordIterations      Int        @default(10000)  
   avatar                  String?      
   email                   String?    @unique @db.VarChar(100)
   fullName                String?    @db.VarChar(100)
@@ -364,10 +366,8 @@ model User {
   emailVerified           Boolean    @default(false) 
   emailVerificationStatus EmailVerificationStatus @default(PENDING)
   otp                     String?    @db.VarChar(4)   
-  otpExpires              DateTime?     
-  userType                UserType   @default(CUSTOMER)
-  status                  UserStatus @default(AVAILABLE)
   createdAt               DateTime   @default(now())
+  otpExpires              DateTime?     
   updatedAt               DateTime?  @updatedAt
   deletedAt               DateTime?
   products                Product[]
@@ -378,10 +378,6 @@ model User {
   seller                  Seller?    
   sessions                Session[]
   addresses               Address[]
-  provinceCode            String?
-  districtCode            String?
-  wardCode                String?
-  address                 String?
   sellerOrders            Order[] @relation("SellerOrders")
   orderStatusHistories    OrderStatusHistory[]
   createdMovements        StockMovement[] @relation("CreatedMovements")
@@ -391,7 +387,7 @@ model User {
 
 model Seller {
   id                      Int        @id @default(autoincrement())
-  userId                  Int        @unique
+  userId                  Int        @unique        
   storeName               String     @db.VarChar(100)
   pickupAddress           String     @db.VarChar(255)
   email                   String     @unique @db.VarChar(100)
@@ -473,7 +469,7 @@ model Address {
   ward                    Ward      @relation(fields: [wardId], references: [id])
   user                    User?     @relation(fields: [userId], references: [id])
   seller                  Seller?   @relation(fields: [sellerId], references: [id])
-  orders Order[] @relation("ShippingAddress")
+  orders                  Order[]   @relation("ShippingAddress")
   @@unique([userId, sellerId])
   @@map("addresses")
 }
@@ -567,7 +563,8 @@ model Order {
   sellerNote        String?          
   shippingCode      String?          
   shippingMethod    String?         
-  shippingFee       Decimal?         @db.Decimal(10, 2)
+  shippingFee       Decimal?          @db.Decimal(10, 2)
+  orderPrintUrl     String?           @db.Text()
   createdBy         Int?              
   confirmedAt       DateTime?        
   orderDate         DateTime          @default(now())

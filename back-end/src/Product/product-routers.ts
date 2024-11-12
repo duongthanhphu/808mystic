@@ -26,12 +26,13 @@ const handleMulterError = (err: any, req: express.Request, res: express.Response
   next(err);
 };
 
-
 router
   .use(handleMulterError)
   .get('/', handler.findAllHandler)
+  .get('/search', handler.searchProductsHandler)
+  .get('/filter', handler.filterByCategoryHandler)
   .get('/:id', handler.findByIdHandler)
   .post('/', upload.array('images', 10), handler.createProductHandler)
-  .post('/image/', upload.array('images', 10), handler.imageTester);
+  .post('/image/', upload.array('images', 10), handler.imageTester)
 
 export default router;

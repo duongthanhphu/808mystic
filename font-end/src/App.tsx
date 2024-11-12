@@ -43,10 +43,11 @@ import HomePage from './Pages/HomePage';
 import ProductDetail from './Pages/ProductDetail'
 import ShopDetail from './Pages/ShopDetail'; 
 import OrderConfirmation from './Pages/ConfirmOrder';
-
+import UserOrders from './Pages/UserOrders/UserOrders'  
 import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart"
 
 import PrivateRoute from './Components/PrivateRoute'
+import CategoryProducts from './Pages/Category/CategoryProducts';
 
 function App() {
     return (
@@ -98,7 +99,9 @@ function App() {
                                 <Route path="seller-login" element={<SellerLogin />} />
                                 <Route path="/shop/:sellerId" element={<ShopDetail/>} />
                                 <Route path="/order-confirmation" element={<OrderConfirmation/>} />
-                                <Route path="/shopping-cart" element={<ShoppingCart />} />
+                                <Route path="/shopping-cart/:userId" element={<ShoppingCart />} />
+                                <Route path="/user/orders" element={<UserOrders />} />
+                                <Route path="/category/:categoryId" element={<CategoryProducts />} />
                         </Route>
                     </Routes>
                 </Router>

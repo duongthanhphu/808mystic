@@ -3,14 +3,48 @@ import { PrismaClient, Prisma, Cart } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const findCartById = async (req: Request, res: Response) => {
-    const {id} = req.params
+    const { userId } = req.params
     try {
-            let cart = await prisma.cart.findUnique({
-                where: { id: Number(id) },
-
+            let cart = await prisma.cart.findMany({
+                where: { userId: Number(userId) },
+                include: {
+                    classification: {
+                        include: {
+                            product: {
+                                include: {
+                                    ProductAttributeValue: {
+                                        include: {
+                                            attributeValue: {
+                                            include: {
+                                    attribute: true
+                                                }
+                                            }
+                                        }
+                                    },
+                                    classificationGroups: {
+                                        include: {
+                                            options: true
+                                        }
+                                    },
+                                    classifications: {
+                                        include: {
+                                            option1: true,
+                                            option2: true
+                                        }
+                                    },
+                                    images: true
+                                }
+                            }}}}   ,
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
             })
 
-            res.json(cart)
+             if (!cart) {
+                return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
+            }
+
+            return res.status(200).json(cart);
     }catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);

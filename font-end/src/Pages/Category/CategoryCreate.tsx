@@ -498,12 +498,7 @@ const handleAddDetail = (setIndex: number) => {
           </Table>
         </Table.ScrollContainer>
       </Stack>
-      <Group justify="space-between">
-        <Button variant="filled" color="gray">
-          Huỷ
-        </Button>
-        <Button>Lưu</Button>
-      </Group>
+      
     </Paper>
   );
 }

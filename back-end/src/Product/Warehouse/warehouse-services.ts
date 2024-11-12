@@ -58,8 +58,6 @@ const getAllWarehouses = async (
     } = params;
 
     const skip = (page - 1) * limit;
-
-    // Xây dựng where clause
     const where: Prisma.WarehouseWhereInput = {
         sellerId,
         status: status,
