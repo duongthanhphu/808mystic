@@ -50,7 +50,8 @@ export default function ClientSignUp() {
             fullName: '',
             provinceCode: '',
             districtCode: '',
-            wardCode: ''
+            wardCode: '',
+            address: ''
         },
         validate: {
             email: isEmail('Email không hợp lệ'),
@@ -68,7 +69,8 @@ export default function ClientSignUp() {
             ),
             provinceCode: (value) => !value ? 'Vui lòng chọn tỉnh/thành phố' : null,
             districtCode: (value) => !value ? 'Vui lòng chọn quận/huyện' : null,
-            wardCode: (value) => !value ? 'Vui lòng chọn phường/xã' : null
+            wardCode: (value) => !value ? 'Vui lòng chọn phường/xã' : null,
+            address: (value) => !value ? 'Vui lòng nhập địa chỉ' : null
         },
         validateInputOnChange: true
     });
@@ -159,7 +161,6 @@ export default function ClientSignUp() {
             if (document.cookie.includes('accessToken')) {
                 // Store user info from response if needed
                 const userData = response.data.user;
-                // You can save user data to global state here (e.g., Redux, Context)
                 
                 notifications.show({
                     title: 'Xác thực thành công',
@@ -277,6 +278,12 @@ export default function ClientSignUp() {
                             data={wards.map(w => ({ value: w.Code, label: w.Name }))}
                             {...form.getInputProps('wardCode')}
                             disabled={!form.values.districtCode}
+                        />
+                        <TextInput
+                            label="Địa chỉ"
+                            placeholder="Nhập địa chỉ"
+                            required
+                            {...form.getInputProps('address')}
                         />
                     </Stack>
                 </form>

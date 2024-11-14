@@ -16,6 +16,9 @@ type routePath = {
     SHIPPING_PROVIDER: string;
     WAREHOUSE: string;
     INVENTORY: string;
+    IMAGE: string; 
+     USERUPDATE: string;
+
 };
 
 const routes : routePath = {
@@ -30,7 +33,9 @@ const routes : routePath = {
     SHIPMENT: `${baseAPI}shipment`,
     SHIPPING_PROVIDER: `${baseAPI}shipping-providers`,
     WAREHOUSE: `${baseAPI}warehouses`,
-    INVENTORY: `${baseAPI}inventory`
+    INVENTORY: `${baseAPI}inventory`,
+    IMAGE: `${baseAPI}image`,
+    USERUPDATE: `${baseAPI}update`,
 };
 
 export default routes;

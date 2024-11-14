@@ -74,7 +74,7 @@ export default function OrderConfirmation() {
         <>
             <ClientHeader />
             <Container>
-                <Paper padding="md" shadow="xs">
+                <Paper shadow="xs">
                     <Title order={2}>Xác nhận đơn hàng</Title>
                     <Text>Mã đơn hàng: {order.id}</Text>
                     <Text>Trạng thái: {order.status}</Text>

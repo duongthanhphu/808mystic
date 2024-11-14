@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Tabs, Paper, Text, Badge, Group, Image, Stack, Button } from '@mantine/core';
-import { getUserId, UserType } from '../../Utils/authentication';
+import { getUserId, UserType } from '../../../Utils/authentication';
 import axios from 'axios';
-import ClientHeader from '../../Components/ClientHeader/ClientHeader';
+import ClientHeader from '../../../Components/ClientHeader/ClientHeader';
+import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
   id: number;
@@ -31,7 +32,7 @@ const UserOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>('all');
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetchOrders(activeTab !== 'all' ? activeTab : undefined);
   }, [activeTab]);
@@ -63,7 +64,9 @@ const UserOrders: React.FC = () => {
       default: return 'gray';
     }
   };
-
+  const handleViewDetail = (orderId: number) => {
+    navigate(`/user/orders/${orderId}`);
+  };
   const getStatusText = (status: string) => {
     switch (status) {
       case 'PENDING': return 'Chờ xác nhận';
@@ -95,13 +98,21 @@ const UserOrders: React.FC = () => {
             <Stack mt="md">
               {orders.map((order) => (
                 <Paper key={order.id} shadow="xs" p="md" withBorder>
-                  <Group mb="md">
-                    <Text fw={500}>Đơn hàng #{order.id}</Text>
-                    <Badge color={getStatusColor(order.status)}>
-                      {getStatusText(order.status)}
-                    </Badge>
+                  <Group mb="md" justify='space-between'>
+                    <div className='flex items-center gap-4'>
+                      <Text fw={500}>Đơn hàng #{order.id}</Text>
+                      <Badge color={getStatusColor(order.status)}>
+                        {getStatusText(order.status)}
+                      </Badge>
+                    </div>
+                    <Button 
+                      variant="light"
+                      onClick={() => handleViewDetail(order.id)}
+                    >
+                      Xem chi tiết
+                    </Button>
                   </Group>
-
+                  
                   {order.items.map((item) => (
                     <Group key={item.id} my="sm">
                       <div className='flex items-center gap-4'>

@@ -73,20 +73,10 @@ interface PaginationType {
 
 const MOCK_FILTERS: FilterOption[] = [
     {
-        id: 'brand',
-        name: 'Thương hiệu',
-        options: ['Apple', 'Dell', 'HP', 'Lenovo', 'Asus']
-    },
-    {
         id: 'status',
         name: 'Tình trạng',
         options: ['Mới', 'Đã sử dụng']
     },
-    {
-        id: 'shipping',
-        name: 'Đơn vị vận chuyển',
-        options: ['Hỏa tốc', 'Nhanh', 'Tiết kiệm']
-    }
 ];
 
 const SORT_OPTIONS = [
@@ -376,7 +366,7 @@ export default function CategoryProducts() {
                             </Card>
 
                             {/* Bộ lọc giá */}
-                            <Card withBorder>
+                            {/* <Card withBorder>
                                 <Title order={4}>Khoảng giá</Title>
                                 <RangeSlider
                                     mt="md"
@@ -387,10 +377,10 @@ export default function CategoryProducts() {
                                     step={10000}
                                     label={(value) => `${value.toLocaleString('vi-VN')}đ`}
                                 />
-                            </Card>
+                            </Card> */}
 
                             {/* Thêm các bộ lọc khác */}
-                            {MOCK_FILTERS.map(filter => (
+                            {/* {MOCK_FILTERS.map(filter => (
                                 <Card key={filter.id} withBorder>
                                     <Title order={4} mb="md">{filter.name}</Title>
                                     <Stack spacing="xs">
@@ -404,7 +394,7 @@ export default function CategoryProducts() {
                                         ))}
                                     </Stack>
                                 </Card>
-                            ))}
+                            ))} */}
 
                             {/* Thêm phần sắp xếp */}
                             <Card withBorder>

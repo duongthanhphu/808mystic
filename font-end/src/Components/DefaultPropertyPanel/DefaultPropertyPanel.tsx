@@ -1,5 +1,6 @@
 import React from 'react';
 import { Code, Group, Paper, Stack, Text } from '@mantine/core';
+import { formatDate } from '../../Utils/formatDate';
 
 
 interface DefaultPropertyPanel {
@@ -16,7 +17,7 @@ export default function DefaultPropertyPanel({
     updatedAt = '__/__/____',
     createdBy = '1',
     updatedBy = '1',
-}: DefaultPropertyPanelProps) {
+}: DefaultPropertyPanel) {
     return (
         <Paper shadow="xs" p="sm">
             <Group>
@@ -27,17 +28,20 @@ export default function DefaultPropertyPanel({
                 <Stack>
                     <Text size="sm">Ngày tạo</Text>
                     <Text>
-                        <Code color="#d0ebff">{createdAt}</Code>
+                        <Code color="#d0ebff">
+                            {typeof createdAt === 'string' ? formatDate(createdAt) : createdAt}
+                        </Code>
                     </Text>
                 </Stack>
                 <Stack>
-                <Text size="sm">Ngày cập nhật</Text>
-                <Text>
-                    <Code color="#d0ebff">{updatedAt}</Code>
-                </Text>
+                    <Text size="sm">Ngày cập nhật</Text>
+                    <Text>
+                        <Code color="#d0ebff">
+                            {typeof updatedAt === 'string' ? formatDate(updatedAt) : updatedAt}
+                        </Code>
+                    </Text>
                 </Stack>
             </Group>
         </Paper>
     );
 }
-    

@@ -14,7 +14,8 @@ import {
     sellerRouter,
     shipmentRouter,
     warehouseRouter,
-    inventoryRouter
+    inventoryRouter,
+    // userUpdateRouter,
 } from './routes';
 import { loadCategories, loadAddresses } from './seeds';
 import shippingRouter from './ShippingProvider/shipping-routers';
@@ -35,7 +36,7 @@ const configureMiddleware = (app: express.Application) => {
 
 
 const configureRoutes = (app: express.Application) => {
-    app.use('/api/v1/image', imageRouter);
+    app.use(PATH.IMAGE, imageRouter);
     app.use(PATH.CATEGORY_ATTRIBUTE, categoryAttributeRouter);
     app.use(PATH.CATEGORY, categoryRouter);
     app.use(PATH.PRODUCT, productRouter);
@@ -48,6 +49,7 @@ const configureRoutes = (app: express.Application) => {
     app.use(PATH.SHIPPING_PROVIDER, shippingRouter);
     app.use(PATH.WAREHOUSE, warehouseRouter);
     app.use(PATH.INVENTORY, inventoryRouter);
+    // app.use(PATH.USERUPDATE, userUpdateRouter);
 };
 
 const initializeServer = () => {

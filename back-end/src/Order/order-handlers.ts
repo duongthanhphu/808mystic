@@ -404,7 +404,13 @@ const orderDetail = async (req: Request, res: Response) => {
                 include: {
                     user: {
                         select: {
-                            addresses: true
+                            addresses: {
+                                include: {
+                                    province: true,
+                                    district: true,
+                                    ward: true
+                                }
+                            }
                         }
                     },
                     
@@ -696,8 +702,13 @@ const calculateShippingFee = async (
 
     const userDistrictsFromGHN = await ghnService.getDistricts(matchedUserProvinceFromGHN.ProvinceID);
     const userDistricts = userDistrictsFromGHN.data || userDistrictsFromGHN;
-
-    const matchedUserDistrictFromGHN = userDistricts.find((d: any) => d.DistrictName.toLowerCase().includes(userDistrict?.Name?.toLowerCase()));
+    console.log("userDistricts", userDistricts)
+    const matchedUserDistrictFromGHN = userDistricts.find((d: any) => {
+      console.log("d", d)
+      console.log("userDistrict", userDistrict)
+      return d.DistrictName.toLowerCase().includes(userDistrict?.Name?.toLowerCase())
+    });
+    console.log("matchedUserDistrictFromGHN", matchedUserDistrictFromGHN)
     if (!matchedUserDistrictFromGHN) {
       throw new Error('Failed to match user district with GHN');
     }
@@ -800,7 +811,7 @@ const mapAddressToGHN = async (
   }
 };
 
-const getUserOrders = async (req: Request, res: Response) => {
+const getAllOrderByUser = async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { status } = req.query;
   
@@ -841,11 +852,68 @@ const getUserOrders = async (req: Request, res: Response) => {
   }
 };
 
+const getOrdersBySeller = async (req: Request, res: Response) => {
+  const { sellerId } = req.params;
+  try {
+    const ordersFromServer = await prismaService.order.findMany({
+      where: {
+        sellerId: Number(sellerId)
+      },
+      include: {
+        items: {
+          include: {
+            classification: {
+              include: {
+                product: {
+                  include: {
+                    images: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        shippingAddress: {
+          include: {
+            province: true,
+            district: true,
+            ward: true
+          }
+        },
+        statusHistory: true
+      }
+    })
+    res.json({ success: true, orders: ordersFromServer });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: 'Lỗi khi lấy danh sách đơn hàng' 
+    });
+  } 
+} 
+
+const getDetailOrderByUser = async (req: Request, res: Response) => { 
+  const { orderId } = req.params;
+  try {
+    const orders = await prismaService.order.findUnique({
+      where: { id: Number(orderId) }
+    })
+    res.json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: 'Lỗi khi lấy danh sách đơn hàng' 
+    });
+  }
+}
+
 export default {
     createOrder,
     confirmOrderBySeller,
     // printOrder,
-    // orderDetail,
+    orderDetail,
     checkoutOrder,
-    getUserOrders
+    getAllOrderByUser,
+    getOrdersBySeller,
+    getDetailOrderByUser
 }

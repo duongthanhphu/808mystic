@@ -16,7 +16,8 @@ import {
     IconTrolley,
     IconBuildingWarehouse,
     IconForklift,
-    IconHomeStar 
+    IconHomeStar ,
+    IconReceipt
 
 } from '@tabler/icons-react';
 import theme from './SellerNavbar.theme'; 
@@ -120,7 +121,7 @@ const navbarLinks: NavbarLink[] = [
         label: 'Đơn hàng',
         icon: <IconReceipt2 />,
         childLink: [
-            { link: 'manage', label: 'Quản lý đơn hàng', icon:  <IconReceiptOff stroke={1.5} />},            
+            { link: 'manage', label: 'Quản lý đơn hàng', icon:  <IconReceipt stroke={1.5} />},            
             { link: 'cancel', label: 'Lý do Huỷ đơn', icon:  <IconReceiptOff stroke={1.5} />},            
         ],
     },

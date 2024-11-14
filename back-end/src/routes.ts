@@ -10,3 +10,5 @@ export { default as sellerRouter } from './Seller/seller-routes';
 export { default as shipmentRouter } from './Shipment/shipment-routers';
 export { default as warehouseRouter } from './Product/Warehouse/warehouse-routers';
 export { default as inventoryRouter } from './Product/Inventory/inventory-routers';
+// export { default as userUpdateRouter } from "./User/UserUpdate/userUpdate-routes";
+

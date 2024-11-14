@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import handler from './cart-handlers';
 
 const router = express.Router();

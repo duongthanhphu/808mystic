@@ -13,7 +13,8 @@ import {
     Button,
     Badge,
     Indicator,
-    Flex
+    Flex,
+    ThemeIcon
 } from '@mantine/core';
 import {
     IconSearch,
@@ -26,8 +27,7 @@ import {
 import { Link } from 'react-router-dom';
 import classes from './ClientHeader.module.css';
 import Logo from '../Logo/808logo';
-import { checkAuthStatus } from '../../Utils/authentication';
-
+import { checkAuthStatus, getUserId, UserType } from '../../Utils/authentication';
 
 export default function ClientHeader() {
         const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -62,21 +62,38 @@ export default function ClientHeader() {
                                     {isAuthenticated ? (
                                 <>
                                     <Tooltip label="Giỏ hàng" position="bottom">
-                                        <UnstyledButton component={Link} to="/cart">
-                                            <Group px="sm" py="xs">
+                                    <UnstyledButton 
+                                        component={Link} 
+                                        to={`/shopping-cart/${getUserId(UserType.CUSTOMER)}`}
+                                    >
+                                        <Group px="sm" py="xs">
+                                            <ThemeIcon variant='light' radius="md" size="lg" color="blue" >
                                                 <IconShoppingCart strokeWidth={1} />
-                                                <Text size="sm">0</Text>
-                                            </Group>
-                                        </UnstyledButton>
-                                    </Tooltip>
-                                    <Tooltip label="Đơn hàng" position="bottom">
-                                        <UnstyledButton component={Link} to="/order">
-                                            <Group px="sm" py="xs" className={classes.iconGroup}>
+                                            </ThemeIcon>
+                                        </Group>
+                                    </UnstyledButton>
+                                </Tooltip>
+                                <Tooltip label="Đơn hàng" position="bottom">
+                                    <UnstyledButton 
+                                        component={Link} 
+                                        to="/user/orders"
+                                    >
+                                        <Group px="sm" py="xs" className={classes.iconGroup}>
+                                            <ThemeIcon variant='light' radius="md" size="lg" color="blue" >
                                                 <IconFileBarcode strokeWidth={1} />
-                                            </Group>
-                                        </UnstyledButton>
-                                    </Tooltip>
-                                    
+                                            </ThemeIcon>
+                                        </Group>
+                                    </UnstyledButton>
+                                </Tooltip>
+                                <Tooltip label="Tài khoản" position="bottom">
+                      <UnstyledButton>
+                        <Group px="sm" py="xs" className={classes.iconGroup}>
+                          <Link to="/profile">
+                            <IconUser strokeWidth={1} />
+                          </Link>
+                        </Group>
+                      </UnstyledButton>
+                    </Tooltip>
                                     
                                 </>
                             ) : (

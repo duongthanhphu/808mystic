@@ -74,7 +74,6 @@ const findCarts = async (req: Request, res: Response) => {
 const createCart = async (req: Request, res: Response) => {
 
     const data = req.body
-    console.log(data)
     try {
             
 
@@ -86,10 +85,9 @@ const createCart = async (req: Request, res: Response) => {
             })
             
             if (!cartFromServer) {
-                let something = await prisma.cart.create({
+                await prisma.cart.create({
                     data: data
                 })
-                console.log(something+ "123")
             }else{ 
                 await prisma.cart.update({
                     where: {id: cartFromServer.id},

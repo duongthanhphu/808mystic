@@ -41,12 +41,11 @@ const registerWithVerification = async (req: Request, res: Response) => {
         email, 
         fullName,
         avatar,
-        provinceId,
-        districtId,
-        wardId,
-        address
+        provinceCode,
+        districtCode,
+        wardCode,
+        address,
     } = req.body;
-
     try {
         const existingUser = await prismaService.user.findFirst({
             where: {
@@ -81,24 +80,22 @@ const registerWithVerification = async (req: Request, res: Response) => {
             otpExpires,
             createdAt: new Date(),
         };
-        const province = await prismaService.province.findUnique({ where: { id: Number(provinceId) } });
-        const district = await prismaService.district.findUnique({ where: { id: Number(districtId) } });
-        const ward = await prismaService.ward.findUnique({ where: { id: Number(wardId) } });
+        const province = await prismaService.province.findUnique({ where: { Code: provinceCode } });
+        const district = await prismaService.district.findUnique({ where: { Code: districtCode } });
+        const ward = await prismaService.ward.findUnique({ where: { Code: wardCode } });
 
             if (!province || !district || !ward) {
                 throw new Error('Thông tin địa chỉ không hợp lệ');
             }
 
-            
-        
         const userFromServer = await prismaService.user.create({ data: userFromClient });
         await sendVerificationEmail(email, otp);
         await prismaService.address.create({
                 data: {
                     addressDetail: address,
-                    provinceId: Number(provinceId),
-                    districtId: Number(districtId),
-                    wardId: Number(wardId),
+                    provinceId: province.id,
+                    districtId: district.id,
+                    wardId: ward.id,
                     userId: userFromServer.id
                 }
             });

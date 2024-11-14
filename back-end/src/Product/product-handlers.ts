@@ -36,7 +36,7 @@ const createProductHandler = async (req: Request, res: Response) => {
             console.error("Lỗi khi parse dữ liệu:", error);
             return res.status(400).json({ error: "Dữ liệu không hợp lệ" });
         }
-        console.log(attributeValues)
+        
         const createdProduct = await productService.createProductService(
             { ...productData, hasClassification },
             attributeValues,

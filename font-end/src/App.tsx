@@ -43,11 +43,15 @@ import HomePage from './Pages/HomePage';
 import ProductDetail from './Pages/ProductDetail'
 import ShopDetail from './Pages/ShopDetail'; 
 import OrderConfirmation from './Pages/ConfirmOrder';
-import UserOrders from './Pages/UserOrders/UserOrders'  
+import UserOrders from './Pages/UserProfile/Contents/OrderManagermentContent.tsx'  
 import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart"
+
+//Buyer
+import Dashboard from './Pages/UserProfile/Dashboard'
 
 import PrivateRoute from './Components/PrivateRoute'
 import CategoryProducts from './Pages/Category/CategoryProducts';
+import OrderDetail from './Pages/UserProfile/Contents/OrderDetail.tsx';
 
 function App() {
     return (
@@ -78,6 +82,7 @@ function App() {
                                 <Route path="/seller/address/shipping" element={<SellerShipping />} />
                                 <Route path="/seller/address/config" element={<SellerAddressConfig />} />
                                 <Route path="/seller/order" element={<SellerOrder />} />
+                                <Route path="/seller/order/detail/:orderId" element={<SellerOrderDetail />} />  
                                 <Route path="/seller/order/cancel" element={<SellerCancelOrder />} />
                                 <Route path="/seller/bill" element={<SellerBill />} />
                                 <Route path="/seller/inventory/" element={<SellerInventory />} />
@@ -100,8 +105,11 @@ function App() {
                                 <Route path="/shop/:sellerId" element={<ShopDetail/>} />
                                 <Route path="/order-confirmation" element={<OrderConfirmation/>} />
                                 <Route path="/shopping-cart/:userId" element={<ShoppingCart />} />
-                                <Route path="/user/orders" element={<UserOrders />} />
+                                <Route path="/user/orders" element={< UserOrders/>} />
+                                <Route path="/user/orders/:orderId" element={<OrderDetail />} />
                                 <Route path="/category/:categoryId" element={<CategoryProducts />} />
+
+                                <Route path="profile" element={<Dashboard />} />
                         </Route>
                     </Routes>
                 </Router>

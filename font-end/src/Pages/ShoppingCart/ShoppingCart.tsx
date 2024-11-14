@@ -354,11 +354,30 @@ const ShoppingCart: React.FC = () => {
                                 }}
                               />
                             )}
-                            <div>
+                            
+                              
+                              <div>
                               <Text fw={500} size="sm" mb={4}>
                                 {item.classification.product.name}
                               </Text>
-                              {renderClassifications(item)}
+                              {item.classification.product.classificationGroups?.map(group => {
+                                // Tìm classification tương ứng với option đã chọn
+                                const selectedOption = item.classification.product.classifications.find(
+                                  c => c.id === item.classificationId
+                                );
+                                
+                                // Tìm option trong group
+                                const option = group.options.find(
+                                  opt => opt.id === selectedOption?.option1Id || opt.id === selectedOption?.option2Id
+                                );
+
+                                return option && (
+                                  <Text key={group.id} size="xs">
+                                    {group.name}: {option.name}
+                                  </Text>
+                                );
+                              })}
+                            
                             </div>
                           </Group>
                         </Table.Td>

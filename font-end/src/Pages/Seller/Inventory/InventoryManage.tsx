@@ -140,8 +140,8 @@ function InventoryManage() {
                             </Table.Td>
                             <Table.Td>{inventory.warehouse.name}</Table.Td>
                             <Table.Td>
-                                <Text weight={500}>{inventory.quantity}</Text>
-                                <Text size="xs" color="dimmed">
+                                <Text>{inventory.quantity}</Text>
+                                <Text size="xs" >
                                     Min: {inventory.minQuantity} - Max: {inventory.maxQuantity}
                                 </Text>
                             </Table.Td>
@@ -159,9 +159,7 @@ function InventoryManage() {
                                     <Button variant="outline" size="xs">
                                         Nhập kho
                                     </Button>
-                                    <Button variant="outline" size="xs">
-                                        Xuất kho
-                                    </Button>
+                                    
                                 </Group>
                             </Table.Td>
                         </Table.Tr>

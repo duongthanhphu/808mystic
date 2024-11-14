@@ -88,8 +88,8 @@ export default function HomePage(){
         return `${minPrice.toLocaleString('vi-VN')}đ`;
     }
     
-    return `${minPrice.toLocaleString('vi-VN')}đ - ${maxPrice.toLocaleString('vi-VN')}đ`;
-};
+        return `${minPrice.toLocaleString('vi-VN')}đ - ${maxPrice.toLocaleString('vi-VN')}đ`;
+    };
     const handlePageChange = (page) => {
         setPagination(prev => ({ ...prev, currentPage: page }));
     };
@@ -110,7 +110,7 @@ export default function HomePage(){
                     {categories.map((category) => (
                         <div 
                             key={category.id}
-                            className="shadown-lg border-blue-500 bg-transparent border bottom-5 rounded-md min-h-16 text-center cursor-pointer hover:text-blue-500"
+                            className="shadow-lg rounded-md  text-center cursor-pointer hover:underline"
                             onClick={() => navigate(`/category/${category.id}`)}
                         >
                             <Text size="md" className='my-5 font-semibold'>{category.name}</Text>
@@ -158,7 +158,6 @@ export default function HomePage(){
                                 >
                                     <Text fw={500}>{product.name}</Text>
                                     <p className='text-md font-semibold text-pink-500'> {getPriceRange(product.classifications)}</p>
-                                    <p className='text-xs font-semibold text-gray-500'>Status: {product.status}</p>
                                 </Flex>
                             </div>
                         </div>
