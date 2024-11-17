@@ -382,6 +382,8 @@ model User {
   orderStatusHistories    OrderStatusHistory[]
   createdMovements        StockMovement[] @relation("CreatedMovements")
   approvedMovements       StockMovement[] @relation("ApprovedMovements")
+  paymentMethods         PaymentMethod[]
+
   @@map("users")
 }
 
@@ -556,6 +558,7 @@ model Cart {
 
 model Order {
   id                Int               @id @default(autoincrement())
+  orderCode         Int?              @unique
   userId            Int
   sellerId          Int   
   shippingAddressId Int?
@@ -577,6 +580,7 @@ model Order {
   items             OrderItem[]
   cancellation      OrderCancellation?
   statusHistory     OrderStatusHistory[] // Thêm lịch sử trạng thái
+  payment           Payment?
   shippingAddress   Address? @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   @@map("orders")
 }
@@ -652,9 +656,88 @@ model Notification {
   @@map("notifications")
 }
 
+enum PaymentStatus {
+  PENDING     // Chờ thanh toán
+  PROCESSING  // Đang xử lý
+  COMPLETED   // Hoàn thành
+  FAILED      // Thất bại
+  REFUNDED    // Hoàn tiền
+  CANCELLED   // Đã hủy
+}
 
+enum PaymentMethodType {
+  CASH_ON_DELIVERY  // Thanh toán khi nhận hàng
+  BANK_TRANSFER     // Chuyển khoản ngân hàng
+  // ... other payment methods
+}
 
+model PaymentMethod {
+  id            Int               @id @default(autoincrement())
+  userId        Int?
+  name          String            // Tên phương thức thanh toán
+  code          String            @unique     // Mã phương thức thanh toán
+  description   String?            // Mô tả
+  type          PaymentMethodType // Loại phương thức thanh toán
+  isActive      Boolean           @default(true) // Trạng thái hoạt động
+  config        Json?             // Cấu hình riêng cho từng phương thức (API keys, endpoints...)
+  
+  // Thông tin ngân hàng (chỉ dùng cho BANK_TRANSFER)
+  bankName      String?           // Tên ngân hàng
+  bankBranch    String?           // Chi nhánh
+  accountNumber String?           // Số tài khoản
+  accountName   String?           // Tên chủ tài khoản
+  swiftCode     String?           // Mã Swift/BIC
+  
+  // Timestamps
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  deletedAt     DateTime?
 
+  // Relations
+  user            User?             @relation(fields: [userId], references: [id])
+  payments        Payment[]
+
+  @@map("payment_methods")
+}
+
+model Payment {
+  id                Int               @id @default(autoincrement())
+  orderId          Int               @unique // Liên kết 1-1 với Order
+  amount           Decimal           @db.Decimal(10,2)
+  paymentMethodId  Int
+  status           PaymentStatus     @default(PENDING)
+  
+  // Thông tin thanh toán bổ sung
+  paymentCode      String?           @unique // Mã thanh toán unique
+  paymentUrl       String?           // URL thanh toán (cho các cổng thanh toán)
+  paymentTime      DateTime?         // Thời gian thanh toán
+  
+  // Relations
+  order            Order             @relation(fields: [orderId], references: [id])
+  paymentMethod    PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
+  transactions     PaymentTransaction[]
+
+  // Timestamps
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  @@map("payments")
+}
+
+// Model lưu lịch sử giao dịch thanh toán
+model PaymentTransaction {
+  id              Int       @id @default(autoincrement())
+  paymentId       Int
+  amount          Decimal   @db.Decimal(10,2)
+  status          PaymentStatus
+  note            String?   @db.Text
+  createdAt       DateTime  @default(now())
+  
+  payment         Payment   @relation(fields: [paymentId], references: [id])
+
+  @@map("payment_transactions")
+}
 
 
 
